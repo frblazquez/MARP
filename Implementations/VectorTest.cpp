@@ -44,5 +44,8 @@ int main()
   v.pop_back();
   v.pop_back();
 
+  //Throws exception (out of range)
+  if(v[5] == 5) cout << "True true\n";
+
   return 0;
 }
