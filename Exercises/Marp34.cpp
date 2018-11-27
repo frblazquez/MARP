@@ -20,6 +20,8 @@ int father(int pos, picture &photo)
 
 void comp_union(int pos, int pos_by, int &max, picture &photo, unordered_map<int, int> &component_size)
 {
+  //En vez de trabajar con las posiciones de las casillas trabajamos con las componentes conexas,
+  //representadas por los padres
   int comp1Father = father(pos, photo),
       comp2Father = father(pos_by, photo);
 
@@ -29,8 +31,12 @@ void comp_union(int pos, int pos_by, int &max, picture &photo, unordered_map<int
     int comp1Size = component_size[comp1Father],
         comp2Size = component_size[comp2Father];
 
+    //Hacemos la componente de menor tamaño hija de la mayor
     if(comp1Size < comp2Size) swap(comp1Father,comp2Father);
 
+    //Un padre <=> una componente conexa <=> un tamaño en el mapa
+    //Los padres que pasan a ser hijos son borrados del mapa
+    //Actualizamos el tamaño y el máximo
     photo[comp2Father] = comp1Father;
     component_size[comp1Father] += component_size[comp2Father];
     component_size.erase(comp2Father);
@@ -42,7 +48,7 @@ void comp_union(int pos, int pos_by, int &max, picture &photo, unordered_map<int
 
 int main()
 {
-  picture photo;
+  picture photo; //Picture <=> int[1000000]
 
   char c; int numPhotos, row,col, pos, pos_by, max;
   int numRows, numCols; cin >> numRows >> numCols; cin.get(c); //reads end line char
@@ -61,14 +67,14 @@ int main()
       if(c == ' ') photo[pos] = -1;
       else
       {
-        photo[pos] = pos;
-        component_size[pos] = 1;
-        if(max == 0) max = 1;
+        photo[pos] = pos;               //Si es una mancha, la marcamos y la uniremos
+        component_size[pos] = 1;        //a cualquier componente conexa a su alrededor
+        if(max == 0) max = 1;           //si esta existe.
 
-        for(int k = -1; k < 1;    k++)
-        for(int l = -1; l < -2*k; l++)
+        for(int k = -1; k < 1;    k++)    //k perteneciente a {-1,0}
+        for(int l = -1; l < -2*k; l++)    //l perteneciente a {-1,0,1} si k=-1 {-1} si k=0
         {
-          if(0 <= i+k && 0 <= j+l && j+l < numCols)
+          if(0 <= i+k && 0 <= j+l && j+l < numCols) //Siempre en el rango
           {
             pos_by = numRows*(i+k) + (j+l);
 

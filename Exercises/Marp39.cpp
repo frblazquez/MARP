@@ -2,6 +2,8 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <queue>
+using namespace std;
 
 template <typename Valor>
 class AristaDirigida_impl
@@ -54,7 +56,7 @@ public:
 /*
   This method makes the attribute minCostFromV have for each position i the minimun
   cost of going form v vertex to i.
-*/
+*
 void casaMensajeroEn(int v)
 {
   int vertex, toVertexCost,adyacente, edgeCost;
@@ -80,10 +82,36 @@ void casaMensajeroEn(int v)
       }
     }
   }
+}*/
+
+void casaMensajeroEn(int v)
+{
+  minCostFromV[v] = 0;
+  nexts.push({0, v});
 }
 
 int costeCasaMensajeroHasta(int w)
 {
+  int vertex, adyacente, edgeCost, vertexCost;
+
+  // No vacía, elemento no encontrado aún en la componente o se puede mejorar
+  while(!nexts.empty() && (minCostFromV[w] == -1 || -nexts.top().first<minCostFromV[w]))
+  {
+    vertex = nexts.top().second; vertexCost = minCostFromV[vertex]; nexts.pop();
+
+    for(int j = 0; j < _ady[vertex].size(); j++)
+    {
+      adyacente = _ady[vertex][j].to();
+      edgeCost = _ady[vertex][j].valor();
+
+      if(minCostFromV[adyacente]==-1 || minCostFromV[adyacente]>vertexCost+edgeCost)
+      {
+        minCostFromV[adyacente] = vertexCost + edgeCost;
+        nexts.push({-minCostFromV[adyacente], adyacente});
+      }
+    }
+  }
+
   return minCostFromV[w];
 }
 
@@ -97,6 +125,7 @@ private:
 
    //MARP39.CPP!
    int minCostFromV[10000];
+   priority_queue<pair<int,int>> nexts;
 };
 
 /*
@@ -124,7 +153,7 @@ int main()
 
     for(int i = 0; i < numConections; i++)
     {
-      cin >> ini >> end >> cost;
+      scanf("%d %d %d",&ini,&end,&cost);
 
       ida.ponArista({ini-1, end-1, cost});
       vuelta.ponArista({end-1,ini-1,cost});
@@ -140,7 +169,7 @@ int main()
 
     for(int i = 0; i<numPackages; i++)
     {
-      cin >> nextHouse;
+      scanf("%d" ,&nextHouse);
 
       if(possible)
       {
@@ -152,8 +181,8 @@ int main()
       }
     }
 
-    if(possible) cout << costeTotal << '\n';
-    else         cout << "Imposible\n";
+    if(possible) printf("%d\n", costeTotal);
+    else         printf("Imposible\n");
 
     cin >> numHouses >> numConections;
   }
