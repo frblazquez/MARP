@@ -1,144 +1,148 @@
+/*
+*   Copyright © 2018
+*
+*   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
+*
+*   Doble grado Ingeniería informática - Matemáticas
+*   Universidad Complutense de Madrid
+*/
+
 #include <iostream>
 #include <unordered_map>
 using namespace std;
 
-const int MAX_PIXELS = 1000000;
+int photo[1000000]; //Global variable BAD PRACTISE!!
 
-typedef int picture[MAX_PIXELS];
-
-int father(int pos, picture &photo)
+int theFather(int pos)
 {
-  if(photo[pos] == pos)    return pos;        //Buscamos aquel que se apunte a sí mismo
-  else
-  {
-    int posFather = father(photo[pos],photo); //Si no es padre, hallamos el padre de su padre
-    photo[pos] = posFather;                   //Ya que subimos, aprovechamos para reducir la distancia al padre
+  //Si es un padre devuelve directamente su posición
+  if(photo[pos]==pos) return pos;
 
-    return posFather;
+  //Si no es un padre, haya su padre y actualiza su puntero
+  photo[pos] = theFather(photo[pos]);
+
+  return photo[pos];
+}
+
+void comp_union(int row, int col, int numRows, int numCols, unordered_map<int, int> &sizesMap, int &max)
+{
+  int father1, father2, comp1Size, comp2Size;
+
+  for(int i = -1; i<=1; i++)
+  for(int j = -1; j<=1; j++)
+  {
+    //Siempre que estemos en el rango buscamos manchas
+    if((i!=0 || j!=0) && 0<=(row+i) && (row+i)<numRows && 0<=(col+j) && (col+j)<numCols)
+    {
+      //Si en efecto es una mancha
+      if(photo[(row+i)*numRows + (col+j)] != -1)
+      {
+        father1 = theFather((row+i)*numRows + (col+j));
+        father2 = theFather(row*numRows + col);
+
+        //Si la colindante y la actual no están ya en la misma mancha
+        if(father1 != father2)
+        {
+          comp1Size = sizesMap[father1];
+          comp2Size = sizesMap[father2];
+
+          if(comp1Size < comp2Size) swap(father1, father2);
+
+          photo[father2] = father1;
+          sizesMap[father1] = comp1Size + comp2Size;
+          sizesMap.erase(father2);
+
+          if((comp1Size + comp2Size)>max) max=(comp1Size + comp2Size);
+        }
+      }
+    }
   }
 }
 
-void comp_union(int pos, int pos_by, int &max, picture &photo, unordered_map<int, int> &component_size)
+void union_inicio(int row, int col, int numRows, int numCols, unordered_map<int, int> &sizesMap, int &max)
 {
-  //En vez de trabajar con las posiciones de las casillas trabajamos con las componentes conexas,
-  //representadas por los padres
-  int comp1Father = father(pos, photo),
-      comp2Father = father(pos_by, photo);
+  int father1, father2, comp1Size, comp2Size;
 
-  //Agregamos la componente de pos_by a la de pos si son de distintas componentes
-  if(comp1Father != comp2Father)
+  for(int i = -1; i<1;      i++)
+  for(int j = -1; j<(-2)*i; j++)
   {
-    int comp1Size = component_size[comp1Father],
-        comp2Size = component_size[comp2Father];
+    //Siempre que estemos en el rango buscamos manchas
+    if(0<=(row+i) && (row+i)<numRows && 0<=(col+j) && (col+j)<numCols)
+    {
+      //Si en efecto es una mancha
+      if(photo[(row+i)*numRows + (col+j)] != -1)
+      {
+        father1 = theFather((row+i)*numRows + (col+j));
+        father2 = theFather(row*numRows + col);
 
-    //Hacemos la componente de menor tamaño hija de la mayor
-    if(comp1Size < comp2Size) swap(comp1Father,comp2Father);
+        //Si la colindante y la actual no están ya en la misma mancha
+        if(father1 != father2)
+        {
+          comp1Size = sizesMap[father1];
+          comp2Size = sizesMap[father2];
 
-    //Un padre <=> una componente conexa <=> un tamaño en el mapa
-    //Los padres que pasan a ser hijos son borrados del mapa
-    //Actualizamos el tamaño y el máximo
-    photo[comp2Father] = comp1Father;
-    component_size[comp1Father] += component_size[comp2Father];
-    component_size.erase(comp2Father);
+          if(comp1Size < comp2Size) swap(father1, father2);
 
-    if(component_size[comp1Father]>max) max = component_size[comp1Father];
+          photo[father2] = father1;
+          sizesMap[father1] = comp1Size + comp2Size;
+          sizesMap.erase(father2);
+
+          if((comp1Size + comp2Size)>max) max=(comp1Size + comp2Size);
+        }
+      }
+    }
   }
 }
-
 
 int main()
 {
-  picture photo; //Picture <=> int[1000000]
-
-  char c; int numPhotos, row,col, pos, pos_by, max;
-  int numRows, numCols; cin >> numRows >> numCols; cin.get(c); //reads end line char
+  char c;  int numRows, numCols, numPhotos, maxUnidos, row,col;
+  cin >> numRows >> numCols;
 
   while(cin)
   {
-    unordered_map<int, int> component_size; max = 0;
+    cin.get(c);                                   //Reads the last end line
+    maxUnidos = 0;                                //Tamaño de la mancha más grande
+    unordered_map<int, int> father_componentSize; //Padre de la componente conexa y tamaño de esta
 
-    // Lectura de datos
-    for(int i = 0; i < numRows; i++)
+    //------------------------- LECTURA DE DATOS -----------------------------//
+    for(int i=0; i<numRows; i++){
+    for(int j=0; j<numCols; j++)
     {
-    for(int j = 0; j < numCols; j++)
-    {
-      cin.get(c); pos = numRows*i + j;
+      cin.get(c);
 
-      if(c == ' ') photo[pos] = -1;
+      if(c==' ')  photo[i*numRows + j] = -1;
       else
       {
-        photo[pos] = pos;               //Si es una mancha, la marcamos y la uniremos
-        component_size[pos] = 1;        //a cualquier componente conexa a su alrededor
-        if(max == 0) max = 1;           //si esta existe.
-
-        for(int k = -1; k < 1;    k++)    //k perteneciente a {-1,0}
-        for(int l = -1; l < -2*k; l++)    //l perteneciente a {-1,0,1} si k=-1 {-1} si k=0
-        {
-          if(0 <= i+k && 0 <= j+l && j+l < numCols) //Siempre en el rango
-          {
-            pos_by = numRows*(i+k) + (j+l);
-
-            if(photo[pos_by] != -1) comp_union(pos,pos_by,max,photo,component_size);
-          }
-        }
+        photo[i*numRows + j] = (i*numRows + j);
+        father_componentSize[i*numRows + j] = 1;
+        union_inicio(i,j,numRows, numCols, father_componentSize, maxUnidos);
       }
-      }
+    } cin.get(c); /* gets the end linde char */ }
+    //------------------------------------------------------------------------//
 
-      cin.get(c);
-    }
-
-    /*for(int i = 0; i < numRows; i++)
-    {
-    for(int j = 0; j < numCols; j++)
-    {
-      cout << photo[i*numRows + j] << " ";
-    }
-    cout << endl;
-    }*/
-
-    cout << max;
+    cout << maxUnidos;
     cin >> numPhotos;
 
-    // Consultas
-    for(int i = 0; i < numPhotos; i++)
+    //-------------------------- NUEVAS MANCHAS ------------------------------//
+    for(int k=0; k<numPhotos; k++)
     {
       cin >> row >> col; row--; col--;
 
-      pos = row*numRows + col;    //Por simplicidad
-
-      if(photo[pos] == -1)        //Si no es ya de una componente conexa
+      if(photo[row*numRows + col] != -1) /* Intentionally */;
+      else
       {
-      photo[pos] = pos;           //La marcamos como contaminada
-      component_size[pos] = 1;    //El tamaño de su mancha es 1
-      if(max == 0) max = 1;
-
-      for(int k = -1; k <= 1; k++)
-      for(int l = -1; l <= 1; l++)
-      {
-        //Siempre que estemos en el rango y no sea la propia posición
-        if(0 <= row+k && row+k <numRows && 0 <= col+l && col+l < numCols && (l!=0 || k!= 0))
-        {
-          pos_by = numRows*(row+k) + (col+l);
-
-          if(photo[pos_by] != -1) comp_union(pos,pos_by,max,photo,component_size);
-        }
-      }
+        photo[row*numRows + col] = row*numRows + col;
+        father_componentSize[row*numRows + col] = 1;
+        comp_union(row,col,numRows,numCols,father_componentSize, maxUnidos);
       }
 
-      /*for(int i = 0; i < numRows; i++)
-      {
-      for(int j = 0; j < numCols; j++)
-      {
-        cout << photo[i*numRows + j] << " ";
-      }
-      cout << endl;
-      }*/
-
-      cout << " " << max;
+      cout << " " << maxUnidos;
     }
+    //------------------------------------------------------------------------//
 
     cout << '\n';
-    cin >> numRows >> numCols; cin.get(c);
+    cin >> numRows >> numCols;
   }
 
   return 0;
