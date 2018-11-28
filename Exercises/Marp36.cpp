@@ -42,3 +42,46 @@ int main()
 
   return 0;
 }
+
+/*
+  PROBLEMA 36 MÉTODOS ALGORÍTMICOS EN RESOLUCIÓN DE PROBLEMAS
+
+  Devuelve true si existe un camino entre el vértice ini y end donde en todas
+  las aristas del camino se verifica que valor_arista > value.
+
+  En el caso del problema del camión devuelve true si existe un camino entre
+  los dos vértices por el que puede transitar un camión de anchura value.
+
+ bool puedePasar(int init, int end, Valor value)
+ {
+   bool esPosible = false;
+   int vertex, adyacente; Valor edgeValue;
+   bool marcado[_V];  for(int i=0;i<_V;i++) marcado[i] = false;
+   std::vector<int> nexts;
+
+   nexts.push_back(init);
+   marcado[init] = true;
+
+   while(!esPosible && !nexts.empty())
+   {
+      vertex = nexts.back(); nexts.pop_back();
+
+      for(int j=0; j<_ady[vertex].size() && !esPosible; j++)
+      {
+        adyacente = _ady[vertex][j].otro(vertex);
+        edgeValue = _ady[vertex][j].valor();
+
+        if(edgeValue >= value)
+        {
+          if(adyacente == end) esPosible=true;
+          else if(!marcado[adyacente])
+          {
+            marcado[adyacente] = true;
+            nexts.push_back(adyacente);
+          }
+        }
+      }
+   }
+
+   return esPosible;
+ }*/

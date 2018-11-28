@@ -38,7 +38,7 @@ template <typename Valor>
 class GrafoDirigidoValorado {
 public:
 
-   GrafoDirigidoValorado(int v) : _V(v), _E(0), _ady(_V) { minCostFromV[0] = 0; for(int i=1; i<v; i++) minCostFromV[i]=-1; }
+   GrafoDirigidoValorado(int v) : _V(v), _E(0), _ady(_V) , toExplore() {for(int i=0; i<v; i++) minCosteTo[i]=-1;}
    int V() const { return _V; }
    int E() const { return _E; }
    void ponArista(AristaDirigida<Valor> arista)
@@ -84,6 +84,7 @@ void casaMensajeroEn(int v)
   }
 }*/
 
+/*
 void casaMensajeroEn(int v)
 {
   minCostFromV[v] = 0;
@@ -114,6 +115,37 @@ int costeCasaMensajeroHasta(int w)
 
   return minCostFromV[w];
 }
+*/
+void casaMensajeroEn(int casa)
+{
+  minCosteTo[casa] = 0;
+  toExplore.push({0, casa});
+}
+
+int costeACasa(int destino)
+{
+  int vertex, toVertexCost, adyacente, edgeCost;
+
+  //Mientras que podamos seguir explorando y queramos seguir explorando (no encontrado o no mejorable)
+  while(!toExplore.empty() && (minCosteTo[destino] == -1 || (-1)*toExplore.top().first < minCosteTo[destino]))
+  {
+    vertex = toExplore.top().second; toVertexCost = minCosteTo[vertex]; toExplore.pop();
+
+    for(int j = 0; j < _ady[vertex].size(); j++)
+    {
+      adyacente = _ady[vertex][j].to(); edgeCost = _ady[vertex][j].valor();
+
+      if(minCosteTo[adyacente]==-1 || minCosteTo[adyacente]>toVertexCost+edgeCost)
+      {
+        minCosteTo[adyacente] = toVertexCost + edgeCost;
+        toExplore.push({(-1)*minCosteTo[adyacente], adyacente});
+      }
+    }
+
+  }
+
+  return minCosteTo[destino];
+}
 
 //----------------------------------------------------------------------------//
 //----------------------------------------------------------------------------//
@@ -123,9 +155,9 @@ private:
    int _E;   // número de aristas
    std::vector<AdysDirVal<Valor>> _ady;   // vector de listas de adyacentes
 
-   //MARP39.CPP!
-   int minCostFromV[10000];
-   priority_queue<pair<int,int>> nexts;
+   //MARP39.CPP
+   int minCosteTo[10000];
+   priority_queue<pair<int,int>> toExplore;
 };
 
 /*
@@ -142,49 +174,50 @@ using namespace std;
 
 int main()
 {
-  int numHouses, numConections, ini, end, cost, casaMensajero, numPackages;
-
-  cin >> numHouses >> numConections;
+  int numCasas, numCaminos, ini, fin, esfuerzo;
+  cin >> numCasas;
 
   while(cin)
   {
-    GrafoDirigidoValorado<int> ida(numHouses);
-    GrafoDirigidoValorado<int> vuelta(numHouses);
+    cin >> numCaminos;
 
-    for(int i = 0; i < numConections; i++)
+    GrafoDirigidoValorado<int> mapaIda(numCasas);
+    GrafoDirigidoValorado<int> mapaVuelta(numCasas);
+
+    for(int i = 0; i < numCaminos; i++)
     {
-      scanf("%d %d %d",&ini,&end,&cost);
+      cin >> ini >> fin >> esfuerzo;
 
-      ida.ponArista({ini-1, end-1, cost});
-      vuelta.ponArista({end-1,ini-1,cost});
+      mapaIda.ponArista({ini-1,fin-1,esfuerzo});
+      mapaVuelta.ponArista({fin-1,ini-1,esfuerzo});
     }
 
-    cin >> casaMensajero >> numPackages;
+    bool posible = true;
+    int casaRepartidor, numPaquetes, nextCasa, costeIda, costeVuelta, costeTotal = 0;
 
-    ida.casaMensajeroEn(casaMensajero-1);
-    vuelta.casaMensajeroEn(casaMensajero-1);
+    cin >> casaRepartidor >> numPaquetes;
 
-    int costeTotal = 0, nextHouse, houseCostIda, houseCostVuelta;
-    bool possible = true;
+    mapaIda.casaMensajeroEn(casaRepartidor-1);
+    mapaVuelta.casaMensajeroEn(casaRepartidor-1);
 
-    for(int i = 0; i<numPackages; i++)
+    for(int i = 0; i < numPaquetes; i++)
     {
-      scanf("%d" ,&nextHouse);
+      cin >> nextCasa;
 
-      if(possible)
+      if(posible)
       {
-        houseCostIda = ida.costeCasaMensajeroHasta(nextHouse-1);
-        houseCostVuelta = vuelta.costeCasaMensajeroHasta(nextHouse-1);
+        costeIda    = mapaIda.costeACasa(nextCasa-1);
+        costeVuelta = mapaVuelta.costeACasa(nextCasa-1);
 
-        possible = (houseCostIda != -1 && houseCostVuelta != -1);
-        costeTotal += houseCostIda + houseCostVuelta;
+        costeTotal += (costeIda + costeVuelta);
+        posible = (costeIda != -1 && costeVuelta != -1);
       }
     }
 
-    if(possible) printf("%d\n", costeTotal);
-    else         printf("Imposible\n");
+    if(posible) cout << costeTotal << '\n';
+    else        cout << "Imposible\n";
 
-    cin >> numHouses >> numConections;
+    cin >> numCasas;
   }
 
   return 0;
