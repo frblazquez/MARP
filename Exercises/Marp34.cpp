@@ -35,10 +35,10 @@ void comp_union(int row, int col, int numRows, int numCols, unordered_map<int, i
     if((i!=0 || j!=0) && 0<=(row+i) && (row+i)<numRows && 0<=(col+j) && (col+j)<numCols)
     {
       //Si en efecto es una mancha
-      if(photo[(row+i)*numRows + (col+j)] != -1)
+      if(photo[(row+i)*numCols + (col+j)] != -1)
       {
-        father1 = theFather((row+i)*numRows + (col+j));
-        father2 = theFather(row*numRows + col);
+        father1 = theFather((row+i)*numCols + (col+j));
+        father2 = theFather(row*numCols + col);
 
         //Si la colindante y la actual no están ya en la misma mancha
         if(father1 != father2)
@@ -70,10 +70,10 @@ void union_inicio(int row, int col, int numRows, int numCols, unordered_map<int,
     if(0<=(row+i) && (row+i)<numRows && 0<=(col+j) && (col+j)<numCols)
     {
       //Si en efecto es una mancha
-      if(photo[(row+i)*numRows + (col+j)] != -1)
+      if(photo[(row+i)*numCols + (col+j)] != -1)
       {
-        father1 = theFather((row+i)*numRows + (col+j));
-        father2 = theFather(row*numRows + col);
+        father1 = theFather((row+i)*numCols + (col+j));
+        father2 = theFather(row*numCols + col);
 
         //Si la colindante y la actual no están ya en la misma mancha
         if(father1 != father2)
@@ -111,11 +111,11 @@ int main()
     {
       cin.get(c);
 
-      if(c==' ')  photo[i*numRows + j] = -1;
+      if(c==' ')  photo[i*numCols + j] = -1;
       else
       {
-        photo[i*numRows + j] = (i*numRows + j);
-        father_componentSize[i*numRows + j] = 1;
+        photo[i*numCols + j] = (i*numCols + j);
+        father_componentSize[i*numCols + j] = 1; if(maxUnidos==0) maxUnidos = 1;
         union_inicio(i,j,numRows, numCols, father_componentSize, maxUnidos);
       }
     } cin.get(c); /* gets the end linde char */ }
@@ -129,11 +129,11 @@ int main()
     {
       cin >> row >> col; row--; col--;
 
-      if(photo[row*numRows + col] != -1) /* Intentionally */;
+      if(photo[row*numCols + col] != -1) /* Intentionally */;
       else
       {
-        photo[row*numRows + col] = row*numRows + col;
-        father_componentSize[row*numRows + col] = 1;
+        photo[row*numCols + col] = row*numCols + col;
+        father_componentSize[row*numCols + col] = 1; if(maxUnidos==0) maxUnidos = 1;
         comp_union(row,col,numRows,numCols,father_componentSize, maxUnidos);
       }
 

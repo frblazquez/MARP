@@ -1,3 +1,12 @@
+/*
+*   Copyright © 2018
+*
+*   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
+*
+*   Doble grado Ingeniería informática - Matemáticas
+*   Universidad Complutense de Madrid
+*/
+
 #include <iostream>
 #include <memory>
 #include <stdexcept>
