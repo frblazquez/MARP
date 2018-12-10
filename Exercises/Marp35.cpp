@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
 using namespace std;
 
 int father(vector<int> &componentes, int pos)
@@ -87,7 +88,8 @@ int main()
       for(int l = -maxSalto; l<= maxSalto; l++)
       {
         //Siempre que no nos salgamos fuera de la matriz! (y no estemos en la posición del árbol colocado)
-        if((k!=0||l!=0) && 0<=rowPos+k && rowPos+k<alto && 0<=colPos+l && colPos+l<ancho)
+        if((k!=0||l!=0) && 0<=rowPos+k && rowPos+k<alto && 0<=colPos+l && colPos+l<ancho &&
+           sqrt(k*k + l*l)<=maxSalto) // CONDICIÓN CRÍTICA!! DISTANCIA EUCLÍDEA!!
         {
           pos_by = (rowPos+k)*ancho + (colPos+l);
 

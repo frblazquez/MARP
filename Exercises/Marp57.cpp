@@ -25,45 +25,41 @@ int main()
     {
       cin >> ini >> fin;
 
-      ini = max(ini, iniInter);
-      fin = min(fin, finInter);
-
-      if(fin>iniInter && ini<finInter) trabajos.push_back({ini, fin});
+      trabajos.push_back({ini, fin});
     }
 
     sort(trabajos.begin(), trabajos.end());
 
-    int cubiertoIniTotal, cubiertoIni, cubiertoFinTotal, cubiertoFin, i, necesarios;
+    int partialIni = iniInter, partialEnd = iniInter, i = 0, necesarios = 1, workIni, workEnd;
     bool imposible = false;
 
-    cubiertoIniTotal = iniInter;  cubiertoIni = iniInter-1;
-    cubiertoFinTotal = iniInter;  cubiertoFin = iniInter;
-    i = 0; necesarios = 0;
-
-    while(cubiertoFinTotal<finInter && i<trabajos.size())
+    while(i<trabajos.size() && partialEnd<finInter && !imposible)
     {
-      if(trabajos[i].first > cubiertoFin)
+      workIni = trabajos[i].first;
+      workEnd = trabajos[i].second;
+
+      if(workIni>partialEnd)  // Hay un segmento de tiempo que no podrá ser asignado
         imposible = true;
-      else if(trabajos[i].second>cubiertoFin && trabajos[i].first>cubiertoIni)
+      else if(workIni<=partialIni)
+      {
+        if(workEnd > partialEnd)
+        {
+          partialEnd = workEnd;
+        }
+      }
+      else if(workEnd > partialEnd)
       {
         necesarios++;
 
-        cubiertoIni = cubiertoFin;
-        cubiertoFin = trabajos[i].second;
-        cubiertoFinTotal = trabajos[i].second;
-      }
-      else
-      {
-        cubiertoFin = trabajos[i].second;
-        cubiertoFinTotal = trabajos[i].second;
+        partialIni = partialEnd;
+        partialEnd = workEnd;
       }
 
       i++;
     }
 
-    if(cubiertoFinTotal<finInter || imposible) cout << "Imposible\n";
-    else                                       cout << necesarios << '\n';
-
+    if(imposible || partialEnd<finInter)  cout << "Imposible\n";
+    else                                  cout << necesarios << endl;
     cin >> iniInter >> finInter >> numTrabajos;
   }
 
