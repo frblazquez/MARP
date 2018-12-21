@@ -6,8 +6,20 @@ int main()
 {
   splay_tree<int> arbol;
 
-  if(arbol.empty()) cout << "Vacío\n";
-  else              cout << "No vacío\n";
+  if(arbol.insert(0))
+    cout << "Insertado\n";
+  else
+    cout << "No insertado\n";
+
+  if(arbol.empty())
+    cout << "La raiz es un puntero nullo\n";
+  else
+    cout << "La insercion se ha hecho bien\n";
+
+  if(arbol.erase(0))
+    cout << "Eliminado\n";
+  else
+    cout << "No eliminado\n";
 
   return 0;
 }
