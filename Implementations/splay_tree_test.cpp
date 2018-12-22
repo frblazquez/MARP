@@ -6,20 +6,23 @@ int main()
 {
   splay_tree<int> arbol;
 
-  if(arbol.insert(0))
-    cout << "Insertado\n";
-  else
-    cout << "No insertado\n";
+  int* puntero1; int* puntero2;
+  int numero1 = 5, numero2 = 10;
 
-  if(arbol.empty())
-    cout << "La raiz es un puntero nullo\n";
-  else
-    cout << "La insercion se ha hecho bien\n";
+  puntero1 = &numero1;
+  puntero2 = &numero2;
 
-  if(arbol.erase(0))
-    cout << "Eliminado\n";
+  if(puntero1==puntero2)
+    cout << "Punteros iguales\n";
   else
-    cout << "No eliminado\n";
+    cout << "Punteros distintos\n";
+
+  puntero2 = &numero1;
+
+  if(puntero1==puntero2)
+    cout << "Punteros iguales\n";
+  else
+    cout << "Punteros distintos\n";
 
   return 0;
 }
