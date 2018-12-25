@@ -11,16 +11,17 @@
 #define SPLAY_TREE_H
 
 #include <functional>
+#include <stdexcept>
 
-template<typename T, typename Comp = std::less<T>>
+template<typename T = int, typename Comp = std::less<T>>
 class splay_tree
 {
   public:
     splay_tree()                 { root = nullptr; }
     bool empty()                 { return root == nullptr; }
-    bool insert(T const& elem)   {      }
-    bool erase(T const& elem)    {      }
-    bool search(T const& elem)   {      }
+    bool insert(T const& elem)   { return insert(root, nullptr, elem); }
+    bool erase(T const& elem)    { return erase( root, nullptr, elem); }
+    bool search(T const& elem)   { return search(root, nullptr, elem); }
     ~splay_tree()                { free_up_memory(root); }
 
   protected:
@@ -45,8 +46,9 @@ class splay_tree
 
     void free_up_memory(Node* node);                        // Frees up the dinamic memory occupied
     bool insert(Node* &node, Node* father, T const& elem);  // Insert elem in the subtree with node as root (true inserted)
-    bool erase(Node* &node, Node* father, T const& elem);   // Erase elem in the subtree with node as root (true if elem was in the tree)
     bool search(Node* node, Node* father, T const& elem);   // Returns true if elem is present in the subtree with node as root
+    bool erase(Node* &node, Node* father, T const& elem);   // Erase elem in the subtree with node as root (true if elem was in the tree)
+    Node* lessGreater(Node* node);                          // Returns a pointer to less greater node than node given
 };
 
 // PRIVATE METHOD IMPLEMENTATIONS
@@ -64,44 +66,57 @@ void splay_tree<T,Comp>::free_up_memory(Node* node)
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::splay(Node* node)
 {
-  while(node->parent != nullptr)
-  {
-    if(node->parent->parent == nullptr)
-    {
-      if(node->parent->left == node)  rotateRight(node->parent);
-      else                            rotateLeft(node->parent);
-    }
-    else if(node->parent->parent->left == node->parent) // grandfather -left child- father
-    {
-      if(node->parent->left == node){                    // father -left child- node
-        rotateRight(node->parent->parent);
-        rotateRight(node->parent);
-      } else {                                            // father -right child- node
-        rotateLeft(node->parent);
-        rotateRight(node->parent);
-      }
-    } else {                                               // grandfather -right child- father
-      if(node->parent->right == node){                 // father -right child- node
-        rotateLeft(node->parent->parent);
-        rotateLeft(node->parent);
-      } else {                                             // father -left child- node
-        rotateRight(node->parent);
-        rotateLeft(node->parent);
-      }
-    }
-  }
+
 }
 
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::rotateRight(Node* node)
 {
+  if(node == nullptr)
+    throw std::domain_error("Right rotation over null node!");
 
+  Node* father    = node->parent;
+  Node* leftChild = node->left;
+
+  if(leftChild != nullptr)
+  {
+    node->left        = leftChild->right;
+    node->parent      = leftChild;
+    leftChild->parent = father;
+    leftChild->right  = node;
+
+    if(node->left != nullptr)  node->left->parent = node;
+    if(father != nullptr)
+      {if(node == father->left)  father->left = leftChild;
+       else                      father->right= leftChild;}
+    else
+      root = leftChild;
+  }
 }
 
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::rotateLeft(Node* node)
 {
+  if(node == nullptr)
+    throw std::domain_error("Left rotation over null node!");
 
+  Node* father     = node->parent;    //Father
+  Node* rightChild = node->right;     //Right child
+
+  if(rightChild != nullptr)
+  {
+    node->right        = rightChild->left;
+    node->parent       = rightChild;
+    rightChild->parent = father;
+    rightChild->left   = node;
+
+    if(node->right != nullptr)  node->right->parent = node;
+    if(father != nullptr)
+      {if(node == father->left)  father->left = rightChild;
+       else                      father->right= rightChild;}
+    else
+      root = rightChild;
+  }
 }
 
 
@@ -122,12 +137,12 @@ bool splay_tree<T, Comp>::insert(Node* &node, Node* father, T const& elem)
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
 {
-  if(node == nullptr)         {splay(father); return false;}
-  else if(node->elem > elem)  return erase(node->left, node, elem);
-  else if(node->elem < elem)  return erase(node->right,node, elem);
+  if(node == nullptr)             {splay(father); return false;}
+  else if(Comp(node->elem, elem))  return erase(node->right,node, elem);
+  else if(Comp(elem, node->elem))  return erase(node->left, node, elem);
   else
   {
-
+    Node* lessGreater = lessGreater(node);
 
     return true;
   }
@@ -137,10 +152,9 @@ template<typename T, typename Comp>
 bool splay_tree<T, Comp>::search(Node* node, Node* father, T const& elem)
 {
   if(node == nullptr)             {splay(father); return false;}
-  else if(node->elem == elem)     {splay(node);   return true;}
-  else if(node->elem >  elem)      return search(node->left, node, elem);
-  else                             return search(node->right, node, elem);
+  else if(Comp(node->elem, elem))  return search(node->right, node, elem);
+  else if(Comp(node->elem, elem))  return search(node->left,  node, elem);
+  else                            {splay(node);   return true;}
 }
-
 
 #endif //SPLAY_TREE_H
