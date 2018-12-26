@@ -1,28 +1,20 @@
 #include "splay_tree.h"
-#include <iostream>
 using namespace std;
 
 int main()
 {
-  splay_tree<int> arbol;
+  splay_tree<int> arbol; int  opcode = 2, aux;
 
-  int* puntero1; int* puntero2;
-  int numero1 = 5, numero2 = 10;
+  while(opcode != -1)
+  {
+    cin >> aux;
 
-  puntero1 = &numero1;
-  puntero2 = &numero2;
+    if(opcode == 0)      arbol.print();
+    else if(opcode == 1) arbol.search(aux);
+    else if(opcode == 2) arbol.insert(aux);
 
-  if(puntero1==puntero2)
-    cout << "Punteros iguales\n";
-  else
-    cout << "Punteros distintos\n";
-
-  puntero2 = &numero1;
-
-  if(puntero1==puntero2)
-    cout << "Punteros iguales\n";
-  else
-    cout << "Punteros distintos\n";
+    cin >> opcode;
+  }
 
   return 0;
 }
