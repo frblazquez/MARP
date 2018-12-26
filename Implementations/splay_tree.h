@@ -51,7 +51,6 @@ class splay_tree
     bool insert(Node* &node, Node* father, T const& elem);  // Insert elem in the subtree with node as root (true inserted)
     bool search(Node* node, Node* father, T const& elem);   // Returns true if elem is present in the subtree with node as root
     bool erase(Node* &node, Node* father, T const& elem);   // Erase elem in the subtree with node as root (true if elem was in the tree)
-    Node* lessGreater(Node* node);                          // Returns a pointer to less greater node than node given
     void print(Node* node, int level);                      // Just to depurate the code
 };
 
@@ -70,6 +69,8 @@ void splay_tree<T,Comp>::free_up_memory(Node* node)
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::splay(Node* node)
 {
+  // WARNING!!
+  // Case when node is the rooot is not controlled!!
   if(node == nullptr)
     throw std::domain_error("Splay over null node!");
 
@@ -153,6 +154,8 @@ void splay_tree<T, Comp>::rotateLeft(Node* node)
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::insert(Node* &node, Node* father, T const& elem)
 {
+  // WARNING!!
+  // Case when node is the rooot is not controlled!!
   if(node == nullptr)
   {
     node = new Node(nullptr, elem, nullptr, father);
@@ -167,13 +170,77 @@ bool splay_tree<T, Comp>::insert(Node* &node, Node* father, T const& elem)
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
 {
+  // WARNING!!
+  // Case when node is the rooot is not controlled!!
   if(node == nullptr)             {splay(father); return false;}
   else if(Comp(node->elem, elem))  return erase(node->right,node, elem);
   else if(Comp(elem, node->elem))  return erase(node->left, node, elem);
-  else
+  else // node points the node we want to delete!
   {
-    Node* lessGreater = lessGreater(node);
+    // Before the deletion we are going to preserve the binary tree structure
+    if(!node->right && !node->left) // Leaf case
+    {
+      if(node->parent == nullptr) root = nullptr;
+      else
+      {
+        if(node == node->parent->left)  node->parent->left = nullptr;
+        else                            node->parent->right= nullptr;
+      }
+    }
+    else if(!node->right)           // Node to delete hasn't right subtree
+    {
+      if(node->parent == nullptr) {root = node->left;  root->father = nullptr;}
+      else
+      {
+        node->left->parent = node->parent;
+        if(node == node->parent->left)  node->parent->left = node->left;
+        else                            node->parent->right= node->left;
+      }
+    }
+    else if(!node->left)            // Node to delete hasn't left  subtree
+    {
+      if(node->parent == nullptr) {root = node->right; root->parent = nullptr;}
+      else
+      {
+        node->right->parent = node->parent;
+        if(node == node->parent->left)  node->parent->left = node->right;
+        else                            node->parent->right= node->right;
+      }
+    }
+    else                            // We have right and left subtree
+    {
+      // We get the less greater
+      Node* lessGreater = node->right; while(lessGreater->left) lessGreater = lessGreater->left;
 
+      // We 'disconnect' it temporally from its position
+      if(lessGreater->right)
+      {
+        if(lessGreater == lessGreater->parent->right)
+         {lessGreater->parent->right = lessGreater->right;
+          lessGreater->right->parent = lessGreater->parent;}
+        else
+         {lessGreater->parent->left  = lessGreater->right;
+          lessGreater->right->parent = lessGreater->parent;}
+      }
+      else
+      {
+        if(lessGreater == lessGreater->parent->right)  lessGreater->parent->right = nullptr;
+        else                                           lessGreater->parent->left  = nullptr;
+      }
+
+      // We replace node to delete with the less greater element
+      lessGreater->left  = node->left;   if(node->left)   node->left->parent = lessGreater;
+      lessGreater->right = node->right;  if(node->right)  node->right->parent= lessGreater;
+      lessGreater->parent= node->parent;
+
+      if(node->parent)
+        {if(node == node->parent->left) node->parent->left = lessGreater;
+         else                           node->parent->right= lessGreater;}
+      else
+        root = lessGreater;
+    }
+
+    delete node;
     return true;
   }
 }
@@ -181,6 +248,8 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::search(Node* node, Node* father, T const& elem)
 {
+  // WARNING!!
+  // Case when node is the rooot is not controlled!!
   if(node == nullptr)               {splay(father); return false;}
   else if(lower(node->elem, elem))   return search(node->right, node, elem);
   else if(lower(node->elem, elem))   return search(node->left,  node, elem);
@@ -198,5 +267,48 @@ void splay_tree<T, Comp>::print(Node* node, int level)
     print(node->right, level+1);
   }
 }
+
+/*
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
+{
+  // WARNING!!
+  // Case when node is the rooot is not controlled!!
+  if(node == nullptr)             {splay(father); return false;}
+  else if(Comp(node->elem, elem))  return erase(node->right,node, elem);
+  else if(Comp(elem, node->elem))  return erase(node->left, node, elem);
+  else
+  {
+    Node* fatherNewChild      = nullptr;
+    Node* rightChildNewFather = nullptr;
+    Node* leftChildNewFather  = nullptr;
+    Node* newInNodePosition   = node->right;
+
+    //New in node position will be the lower of the greater than node
+    while(newInNodePosition->left)
+      newInNodePosition = newInNodePosition->left;
+
+    if(!node->left && !node->right)         /* Intentionally /;
+    else if(!node->right && node->left) {fatherNewChild = node->left; leftChildNewFather = father;}
+    else
+    {
+      leftChildNewFather  = newInNodePosition;
+      rightChildNewFather = newInNodePosition;
+      fatherNewChild      = newInNodePosition;
+    }
+
+    if(node->right) node->right->parent = rightChildNewFather;
+    if(node->left)  node->left->parent  = leftChildNewFather;
+    if(father)
+      {if(node == father->left)  father->left = fatherNewChild;
+       else                      father->right= fatherNewChild;}
+    else
+      /* WARNING!!! /;
+
+    delete node;
+    return true;
+  }
+}
+*/
 
 #endif //SPLAY_TREE_H
