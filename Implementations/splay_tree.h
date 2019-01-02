@@ -18,31 +18,29 @@ template<typename T, typename Comp = std::less<T>>
 class splay_tree
 {
   public:
-    splay_tree()                 { root = nullptr; lower = Comp(); }
-    ~splay_tree()                { free_up_memory(root); }
-    bool empty()                 { return root == nullptr; }
-    bool insert(T const& elem)   { return insert(root, nullptr, elem); }
-    bool erase(T const& elem)    { return erase( root, nullptr, elem); }
-    bool search(T const& elem)   { return search(root, nullptr, elem); }
-    void print()                 { print(root, 0); }
+    splay_tree()                  {root = nullptr; lower = Comp();}
+   ~splay_tree()                  {free_up_memory(root);}
+
+    bool empty()                  {return root == nullptr;}
+    bool insert(T const& elem);
+    bool erase(T const& elem);
+    bool find(T const& elem);
 
   protected:
-    // Node type defined
+
     struct Node
     {
-        T elem;
-        Node* right;
-        Node* left;
-        Node* parent;
+      T     elem;
+      Node* left;
+      Node* right;
+      Node* parent;
 
-        Node(Node* l, T const& e, Node* r, Node* p) : elem(e), right(r), left(l), parent(p) {}
+      Node(Node* l, T const& e, Node* r, Node* p) : elem(e),left(l),right(r),parent(p) {}
     };
 
-    // Atributes
     Node* root;
-    Comp lower;
+    Comp  lower;
 
-    // Private methods
     void splay(Node* node);                                 // Brings node pointed to the root keeping binary tree structure
     void rotateRight(Node* node);                           // Rotates right from node pointed
     void rotateLeft(Node* node);                            // Rotates left  from node pointed
@@ -54,52 +52,6 @@ class splay_tree
     void print(Node* node, int level);                      // Just to depurate the code
 };
 
-// PRIVATE METHOD IMPLEMENTATIONS
-template<typename T, typename Comp>
-void splay_tree<T,Comp>::free_up_memory(Node* node)
-{
-  if(node != nullptr)
-  {
-    free_up_memory(node->left);
-    free_up_memory(node->right);
-    delete node;
-  }
-}
-
-template<typename T, typename Comp>
-void splay_tree<T, Comp>::splay(Node* node)
-{
-  // WARNING!!
-  // Case when node is the rooot is not controlled!!
-  if(node == nullptr)
-    throw std::domain_error("Splay over null node!");
-
-  while(node->parent)
-  {
-    if(!node->parent->parent)  //Direct child from root!
-    {
-      if(node->parent->left == node)  rotateRight(node->parent);
-      else                            rotateLeft(node->parent);
-    }
-    else                       //Node has grandfather
-    {
-      Node* grandParent = node->parent->parent;
-
-      if(grandParent->left && node == grandParent->left->left)          //Zig-zig
-       {rotateRight(grandParent);
-        rotateRight(node->parent);}
-      else if(grandParent->right && node == grandParent->right->right)  //Zag-zag
-        {rotateLeft(grandParent);
-         rotateLeft(node->parent);}
-      else if(grandParent->left && node == grandParent->left->right)   //Zag-Zig
-        {rotateLeft(node->parent);
-         rotateRight(grandParent);}
-      else                                                             //Zig-zag
-        {rotateRight(node->parent);
-         rotateLeft(grandParent);}
-    }
-  }
-}
 
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::rotateRight(Node* node)
@@ -107,8 +59,8 @@ void splay_tree<T, Comp>::rotateRight(Node* node)
   if(node == nullptr)
     throw std::domain_error("Right rotation over null node!");
 
-  Node* father    = node->parent;
-  Node* leftChild = node->left;
+  Node* father    = node->parent;   //Father
+  Node* leftChild = node->left;     //Left child
 
   if(leftChild != nullptr)
   {
@@ -152,20 +104,128 @@ void splay_tree<T, Comp>::rotateLeft(Node* node)
 }
 
 template<typename T, typename Comp>
+void splay_tree<T, Comp>::splay(Node* node)
+{
+  if(node == nullptr)
+    throw std::domain_error("Splay over null node!");
+
+  while(node->parent)
+  {
+    if(!node->parent->parent)  //Direct child from root!
+    {
+      if(node->parent->left == node)  rotateRight(node->parent);
+      else                            rotateLeft(node->parent);
+    }
+    else                       //Node has grandfather
+    {
+      Node* grandParent = node->parent->parent;
+
+      if(grandParent->left       && node == grandParent->left->left)    //Zig-zig
+       {rotateRight(grandParent);
+        rotateRight(node->parent);}
+      else if(grandParent->right && node == grandParent->right->right)  //Zag-zag
+        {rotateLeft(grandParent);
+         rotateLeft(node->parent);}
+      else if(grandParent->left  && node == grandParent->left->right)   //Zag-Zig
+        {rotateLeft(node->parent);
+         rotateRight(grandParent);}
+      else if(grandParent->right && node == grandParent->right->left)   //Zig-zag
+        {rotateRight(node->parent);
+         rotateLeft(grandParent);}
+      else
+        throw "Illegal state reached during splay operation!";
+    }
+  }
+}
+
+
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::insert(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node != nullptr)
+  {
+    father = node;
+
+         if(lower(elem, node->elem))     node = node->left;
+    else if(lower(node->elem, elem))     node = node->right;
+    else {splay(node); return false;} // The element is already in the tree
+  }
+
+  node = new Node(nullptr, elem, nullptr, father);
+
+  if(father != nullptr)
+    {if(lower(elem, father->elem)) father->left = node;
+     else                          father->right= node;}
+  else
+    root = node;
+
+  splay(node);  return true;
+}
+
+/*
+template<typename T, typename Comp>
 bool splay_tree<T, Comp>::insert(Node* &node, Node* father, T const& elem)
 {
-  // WARNING!!
-  // Case when node is the rooot is not controlled!!
   if(node == nullptr)
   {
     node = new Node(nullptr, elem, nullptr, father);
     splay(node);
     return true;
   }
-  else if(lower(node->elem,elem))   return insert(node->right, node, elem);
-  else if(lower(elem, node->elem))  return insert(node->left,  node, elem);
+  else if(less(node->elem,elem))   return insert(node->right, node, elem);
+  else if(less(elem, node->elem))  return insert(node->left,  node, elem);
   else                             {splay(node); return false;}
 }
+*/
+
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::find(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node != nullptr)
+  {
+    father = node;
+
+         if(lower(elem, node->elem))     node = node->left;
+    else if(lower(node->elem, elem))     node = node->right;
+    else {splay(node); return true;} // The element is already in the tree
+  }
+
+  if(father != nullptr) splay(father);
+  
+  return false;
+}
+
+/*
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::search(Node* node, Node* father, T const& elem)
+{
+  // WARNING!!
+  // Case when node is the rooot is not controlled!!
+  if(node == nullptr)               {splay(father); return false;}
+  else if(lower(node->elem, elem))   return search(node->right, node, elem);
+  else if(lower(node->elem, elem))   return search(node->left,  node, elem);
+  else                              {splay(node);   return true;}
+}
+*/
+
+template<typename T, typename Comp>
+void splay_tree<T,Comp>::free_up_memory(Node* node)
+{
+  if(node != nullptr)
+  {
+    free_up_memory(node->left);
+    free_up_memory(node->right);
+    delete node;
+  }
+}
+
+
+
+/*
 
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
@@ -251,28 +311,6 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
     return true;
   }
 }
-
-template<typename T, typename Comp>
-bool splay_tree<T, Comp>::search(Node* node, Node* father, T const& elem)
-{
-  // WARNING!!
-  // Case when node is the rooot is not controlled!!
-  if(node == nullptr)               {splay(father); return false;}
-  else if(lower(node->elem, elem))   return search(node->right, node, elem);
-  else if(lower(node->elem, elem))   return search(node->left,  node, elem);
-  else                              {splay(node);   return true;}
-}
-
-template<typename T, typename Comp>
-void splay_tree<T, Comp>::print(Node* node, int level)
-{
-  if(node != nullptr)
-  {
-    std::cout << level << ':' << node->elem << " ";
-
-    print(node->left,  level+1);
-    print(node->right, level+1);
-  }
-}
+*/
 
 #endif //SPLAY_TREE_H
