@@ -12,6 +12,7 @@ int main()
     if(opcode == 0)      arbol.print();
     else if(opcode == 1) arbol.search(aux);
     else if(opcode == 2) arbol.insert(aux);
+    else if(opcode == 3) arbol.erase(aux);
 
     cin >> opcode;
   }
