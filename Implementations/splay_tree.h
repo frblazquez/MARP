@@ -21,10 +21,19 @@ class splay_tree
     splay_tree()                  {root = nullptr; lower = Comp();}
    ~splay_tree()                  {free_up_memory(root);}
 
+    void print()                  {print(root, 0);}
     bool empty()                  {return root == nullptr;}
+    void stupid_test()            {splay(nullptr);}
+
+    //For iterative implementations
     bool insert(T const& elem);
     bool erase(T const& elem);
     bool find(T const& elem);
+
+    //For recursive implementations
+    //bool find(Node* node, Node* father, T const& elem);
+    //bool insert(Node* &node, Node* father, T const& elem);
+    //bool erase(Node* &node, Node* father, T const& elem);
 
   protected:
 
@@ -46,9 +55,6 @@ class splay_tree
     void rotateLeft(Node* node);                            // Rotates left  from node pointed
 
     void free_up_memory(Node* node);                        // Frees up the dinamic memory occupied
-    bool insert(Node* &node, Node* father, T const& elem);  // Insert elem in the subtree with node as root (true inserted)
-    bool search(Node* node, Node* father, T const& elem);   // Returns true if elem is present in the subtree with node as root
-    bool erase(Node* &node, Node* father, T const& elem);   // Erase elem in the subtree with node as root (true if elem was in the tree)
     void print(Node* node, int level);                      // Just to depurate the code
 };
 
@@ -138,7 +144,6 @@ void splay_tree<T, Comp>::splay(Node* node)
   }
 }
 
-
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::insert(T const& elem)
 {
@@ -195,7 +200,7 @@ bool splay_tree<T, Comp>::find(T const& elem)
   }
 
   if(father != nullptr) splay(father);
-  
+
   return false;
 }
 
@@ -213,20 +218,84 @@ bool splay_tree<T, Comp>::search(Node* node, Node* father, T const& elem)
 */
 
 template<typename T, typename Comp>
-void splay_tree<T,Comp>::free_up_memory(Node* node)
+bool splay_tree<T, Comp>::erase(T const& elem)
 {
-  if(node != nullptr)
+  Node* father = nullptr; Node* node = root;
+
+  while(node)
   {
-    free_up_memory(node->left);
-    free_up_memory(node->right);
-    delete node;
+         if(lower(elem, node->elem))   {father = node; node = node->left;}
+    else if(lower(node->elem, elem))   {father = node; node = node->right;}
+    else break; // node points to a node with elem inside
   }
+
+  if(node == nullptr) {if(father) splay(father); return false;}
+
+  if(!node->left && !node->right)   // LEAF CASE
+  {
+    if(node->parent == nullptr) root = nullptr;
+    else
+    {
+      if(node == node->parent->left)  node->parent->left = nullptr;
+      else                            node->parent->right= nullptr;
+    }
+  }
+  else if(!node->left)              // ONLY RIGHT SUBTREE
+  {
+    if(node->parent == nullptr) {root = node->right; root->parent = nullptr;}
+    else
+    {
+      node->right->parent = node->parent;
+      if(node == node->parent->left)  node->parent->left = node->right;
+      else                            node->parent->right= node->right;
+    }
+  }
+  else if(!node->right)             // ONLY LEFT SUBTREE
+  {
+      if(node->parent == nullptr) {root = node->left;  root->parent = nullptr;}
+      else
+      {
+        node->left->parent = node->parent;
+        if(node == node->parent->left)  node->parent->left = node->left;
+        else                            node->parent->right= node->left;
+      }
+  }
+  else                              // BOTH CHILDREN EXISTS
+  {
+    // We get the less greater
+    Node* lessGreater = node->right; while(lessGreater->left) lessGreater = lessGreater->left;
+
+    // We 'disconnect' it temporally from its position
+    if(lessGreater->right)
+    {
+      lessGreater->right->parent = lessGreater->parent;
+
+      if(lessGreater == lessGreater->parent->right) lessGreater->parent->right = lessGreater->right;
+      else                                          lessGreater->parent->left  = lessGreater->right;
+    }
+    else
+    {
+      if(lessGreater == lessGreater->parent->right)  lessGreater->parent->right = nullptr;
+      else                                           lessGreater->parent->left  = nullptr;
+    }
+
+    // We replace node to delete with the less greater element
+    lessGreater->left  = node->left;   if(node->left)   node->left->parent = lessGreater;
+    lessGreater->right = node->right;  if(node->right)  node->right->parent= lessGreater;
+    lessGreater->parent= node->parent;
+
+    if(node->parent)
+      {if(node == node->parent->left) node->parent->left = lessGreater;
+       else                           node->parent->right= lessGreater;}
+    else
+      root = lessGreater;
+  }
+
+  delete node;  if(father) splay(father);
+  return true;
 }
 
-
-
 /*
-
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
 {
@@ -312,5 +381,28 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
   }
 }
 */
+
+template<typename T, typename Comp>
+void splay_tree<T, Comp>::print(Node* node, int level)
+{
+  if(node != nullptr)
+  {
+    std::cout << level << ':' << node->elem << " ";
+
+    print(node->left,  level+1);
+    print(node->right, level+1);
+  }
+}
+
+template<typename T, typename Comp>
+void splay_tree<T,Comp>::free_up_memory(Node* node)
+{
+  if(node != nullptr)
+  {
+    free_up_memory(node->left);
+    free_up_memory(node->right);
+    delete node;
+  }
+}
 
 #endif //SPLAY_TREE_H
