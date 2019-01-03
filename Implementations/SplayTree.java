@@ -28,7 +28,6 @@ public class SplayTree<T extends Comparable<T>>
 			System.out.println("La raiz no tiene hijo izquierdo");
 	}
 
-
 	public SplayTree()
 	{
 		root  = null;
@@ -83,7 +82,89 @@ public class SplayTree<T extends Comparable<T>>
 	}
 	public boolean erase(T elem)
 	{
-		return false;
+	  Node father = null;
+	  Node node = root;
+
+	  while(node != null)
+	  {
+	         if(elem.compareTo(node.elem)<0)   {father = node; node = node.left;}
+	    else if(elem.compareTo(node.elem)>0)   {father = node; node = node.right;}
+	    else break; // node points to a node with elem inside
+	  }
+
+	  if(node == null) {if(father != null) splay(father); return false;}
+
+	  if(node.left == null && node.right == null)   // LEAF CASE
+	  {
+	    if(node.parent == null) root = null;
+	    else
+	    {
+	    //We want to compare references, not values!! We use '=='
+	      if(node == node.parent.left)  node.parent.left = null;
+	      else                          node.parent.right= null;
+	    }
+	  }
+	  else if(node.left == null)              // ONLY RIGHT SUBTREE
+	  {
+	    if(node.parent == null) {root = node.right; root.parent = null;}
+	    else
+	    {
+	      node.right.parent = node.parent;
+
+	      if(node == node.parent.left)  node.parent.left = node.right;
+	      else                          node.parent.right= node.right;
+	    }
+	  }
+	  else if(node.right == null)             // ONLY LEFT SUBTREE
+	  {
+	      if(node.parent == null) {root = node.left;  root.parent = null;}
+	      else
+	      {
+	        node.left.parent = node.parent;
+
+	        if(node == node.parent.left)  node.parent.left = node.left;
+	        else                          node.parent.right= node.left;
+	      }
+	  }
+	  else                              // BOTH CHILDREN EXISTS
+	  {
+	    // We get the less greater
+	    Node lessGreater = node.right; while(lessGreater.left != null) lessGreater = lessGreater.left;
+
+	    // We 'disconnect' it temporally from its position
+	    if(lessGreater.right != null)
+	    {
+	      lessGreater.right.parent = lessGreater.parent;
+
+	      if(lessGreater == lessGreater.parent.right) lessGreater.parent.right = lessGreater.right;
+	      else                                        lessGreater.parent.left  = lessGreater.right;
+	    }
+	    else
+	    {
+	      if(lessGreater == lessGreater.parent.right)  lessGreater.parent.right = null;
+	      else                                         lessGreater.parent.left  = null;
+	    }
+
+	    // We replace node to delete with the less greater element
+	    lessGreater.left  = node.left;   if(node.left != null)  node.left.parent = lessGreater;
+	    lessGreater.right = node.right;  if(node.right!= null)  node.right.parent= lessGreater;
+	    lessGreater.parent= node.parent;
+
+	    if(node.parent != null)
+	      {if(node == node.parent.left) node.parent.left = lessGreater;
+	       else                         node.parent.right= lessGreater;}
+	    else
+	      root = lessGreater;
+	  }
+
+	  if(father != null)
+		  splay(father);
+
+	  return true;
+	}
+	public void    print()
+	{
+		print(root, 0);
 	}
 
 	protected void splay(Node node)
@@ -164,6 +245,15 @@ public class SplayTree<T extends Comparable<T>>
 		      root = rightChild;
 		  }
 	}
+	public void    print(Node node, int level)
+	{
+	  if(node != null)
+	  {
+	    System.out.print(level + ":" + node.elem + " ");
 
+	    print(node.left,  level+1);
+	    print(node.right, level+1);
+	  }
+	}
 
 }
