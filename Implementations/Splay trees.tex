@@ -234,13 +234,55 @@ class splay_tree
 }; //splay_tree
 \end{lstlisting}
 
+\subsection{Búsqueda:}
+
+Se realiza igual que en el caso de un árbol binario de búsqueda convencional 
+con la salvedad de que se realiza un splay del nodo encontrado o el último 
+nodo visitado si el elemento no se encuentra en el árbol. Recuerdo que 
+\textit{lower} es un comparador que actua sobre los elementos de tipo 
+\textit{T}. Se aprecia en este método por qué el comparador debe crear un 
+orden estricto en el conjunto de posibles valores de \textit{T}. En el bucle 
+de descenso desde la raíz, buscando el elemento recibido como parámetro, se 
+realiza una comparación nodo a nodo. Si el parámetro es menor que el elemento 
+del nodo, la búsqueda continúa por el hijo izquierdo del nodo. Si el parámetro
+es mayor, continúa por el hijo derecho. Si un elemento no es mayor ni menor 
+que el recibido como parámetro, el método sobreentiende que es igual. Es por 
+esto que el comparador debe establecer un orden total estricto. 
+
+\begin{lstlisting}
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::find(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node != nullptr)
+  {
+    father = node;
+
+         if(lower(elem, node->elem))     node = node->left;
+    else if(lower(node->elem, elem))     node = node->right;
+    else {splay(node); return true;} // Encuentra el elemento
+  }
+
+  if(father != nullptr) splay(father);
+
+  return false;
+}
+\end{lstlisting}
+
 \subsection{Inserción:}
 
-La inserción es igual que en un árbol binario de búsqueda (actualizando 
-también el atributo extra añadido en los nodos) con la salvedad de que al
-terminar el proceso se realiza una llamada al método splay con el nodo 
+La inserción es igual que en un árbol binario de búsqueda con la salvedad de 
+que al terminar el proceso se realiza una llamada al método splay con el nodo 
 insertado, de realizarse la inserción, o con aquel nodo que ya contiene la 
-clave a insertar.
+clave a insertar. No incluir la función de unión de árboles descarta la 
+posibilidad de reducir la inserción de elementos a la unión del árbol actual
+con un árbol con un único nodo, el del elemento a insertar. Sí que se podía
+optar por una implementación recursiva en vez de iterativa a la hora de 
+descender por los nodos del árbol. En mi caso he optado por una implementación
+iterativa pues en la implementación recursiva, al llegar a un nodo nulo al
+final del descenso no se puede saber cuál es su nodo padre si no es añadiendo
+un atributo más como parámetro. 
 
 \begin{lstlisting}
 template<typename T, typename Comp>
@@ -254,22 +296,190 @@ bool splay_tree<T, Comp>::insert(T const& elem)
 
          if(lower(elem, node->elem))     node = node->left;
     else if(lower(node->elem, elem))     node = node->right;
-    else {splay(node); return false;} // The element is already in the tree
+    else {splay(node); return false;} // El elemento esta
   }
 
+  // Llegados aqui el elemento no esta, lo insertamos
   node = new Node(nullptr, elem, nullptr, father);
 
+  // Actualizamos su padre y, si es necesario la raiz
   if(father != nullptr)
     {if(lower(elem, father->elem)) father->left = node;
      else                          father->right= node;}
   else
     root = node;
 
+  // Finalmente llevamos el nuevo nodo a la raiz
   splay(node);  return true;
 }
 \end{lstlisting}
 
+\subsection{Borrado:}
 
+\begin{lstlisting}
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::erase(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node)
+  {
+        if(lower(elem, node->elem)) 
+            {father = node; node = node->left;}
+   else if(lower(node->elem, elem)) 
+            {father = node; node = node->right;}
+   else break; // Llegamos al nodo a borrar
+  }
+
+  // Si el elemento no esta, flotamos el padre y terminamos
+  if(node == nullptr) {if(father) splay(father); return false;}
+
+  /*
+  *    A partir de este momento node apunta al nodo que queremos
+  *    borrar, vamos a distinguir casos segun su situacion.
+  *
+  *    El unico nodo con padre nulo es la raiz, usamos este 
+  *    criterio para saber cuando actualizar la raiz.
+  */
+  
+  if(!node->left && !node->right)   // CASO 1: Hoja
+  {
+    if(node->parent == nullptr) root = nullptr;
+    else
+    {
+      if(node == node->parent->left)  node->parent->left = nullptr;
+      else                            node->parent->right= nullptr;
+    }
+  }
+  else if(!node->left)              // CASO 2: Solo hijo derecho
+  {
+    if(node->parent == nullptr) 
+        {root = node->right; root->parent = nullptr;}
+    else
+    {
+      node->right->parent = node->parent;
+      if(node == node->parent->left)  
+        node->parent->left = node->right;
+      else                            
+        node->parent->right= node->right;
+    }
+  }
+  else if(!node->right)             // CASO 3: Solo hijo izquierdo
+  {
+      if(node->parent == nullptr) 
+          {root = node->left;  root->parent = nullptr;}
+      else
+      {
+        node->left->parent = node->parent;
+        if(node == node->parent->left)  
+            node->parent->left = node->left;
+        else                            
+            node->parent->right= node->left;
+      }
+  }
+  else                              // CASO 4: Ambos hijos existen
+  {
+    // 
+    Node* lessGreater = node->right; 
+    while(lessGreater->left) lessGreater = lessGreater->left;
+
+    // We 'disconnect' it temporally from its position
+    if(lessGreater->right)
+    {
+      lessGreater->right->parent = lessGreater->parent;
+
+      if(lessGreater == lessGreater->parent->right) lessGreater->parent->right = lessGreater->right;
+      else                                          lessGreater->parent->left  = lessGreater->right;
+    }
+    else
+    {
+      if(lessGreater == lessGreater->parent->right)  lessGreater->parent->right = nullptr;
+      else                                           lessGreater->parent->left  = nullptr;
+    }
+
+    // We replace node to delete with the less greater element
+    lessGreater->left  = node->left;   if(node->left)   node->left->parent = lessGreater;
+    lessGreater->right = node->right;  if(node->right)  node->right->parent= lessGreater;
+    lessGreater->parent= node->parent;
+
+    if(node->parent)
+      {if(node == node->parent->left) node->parent->left = lessGreater;
+       else                           node->parent->right= lessGreater;}
+    else
+      root = lessGreater;
+  }
+
+  delete node;  if(father) splay(father);
+  return true;
+}
+\end{lstlisting}
+
+\subsection{Rotación de un nodo:}
+\begin{lstlisting}
+template<typename T, typename Comp>
+void splay_tree<T, Comp>::rotateRight(Node* node)
+{
+  if(node == nullptr)
+    throw std::domain_error("Right rotation over null node!");
+
+  Node* father    = node->parent;   //Guardamos el padre
+  Node* leftChild = node->left;     //Guardamos el hijo izquierdo
+
+  if(leftChild != nullptr)
+  {
+    node->left        = leftChild->right;
+    node->parent      = leftChild;
+    leftChild->parent = father;
+    leftChild->right  = node;
+
+    if(node->left != nullptr)  node->left->parent = node;
+    if(father     != nullptr)
+      {if(node == father->left)  father->left = leftChild;
+       else                      father->right= leftChild;}
+    else
+      root = leftChild;
+  }
+}
+\end{lstlisting}
+
+
+\subsection{Splay:}
+\begin{lstlisting}
+template<typename T, typename Comp>
+void splay_tree<T, Comp>::splay(Node* node)
+{
+  if(node == nullptr)
+    throw std::domain_error("Splay over null node!");
+
+  while(node->parent)
+  {
+    if(!node->parent->parent)  //Direct child from root!
+    {
+      if(node->parent->left == node)  rotateRight(node->parent);
+      else                            rotateLeft(node->parent);
+    }
+    else                       //Node has grandfather
+    {
+      Node* grandParent = node->parent->parent;
+
+      if(grandParent->left       && node == grandParent->left->left)    //Zig-zig
+       {rotateRight(grandParent);
+        rotateRight(node->parent);}
+      else if(grandParent->right && node == grandParent->right->right)  //Zag-zag
+        {rotateLeft(grandParent);
+         rotateLeft(node->parent);}
+      else if(grandParent->left  && node == grandParent->left->right)   //Zag-Zig
+        {rotateLeft(node->parent);
+         rotateRight(grandParent);}
+      else if(grandParent->right && node == grandParent->right->left)   //Zig-zag
+        {rotateRight(node->parent);
+         rotateLeft(grandParent);}
+      else
+        throw "Illegal state reached during splay operation!";
+    }
+  }
+}
+\end{lstlisting}
 
 \section{Analysis}
 
@@ -336,3 +546,4 @@ IEEE Trans.\ Instrum.\ Meas.\ \textbf{42}, 640 (1993).
 
 
 \end{document}
+
