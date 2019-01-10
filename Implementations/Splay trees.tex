@@ -167,15 +167,15 @@ La interfaz pública del usuario se puede consultar en la tabla inferior.
 \end{tabular}
 \end{center}
 
-El diseño se ha realizado así para asemejarse en la medida a la clase set de
-la librería estándar de \textit{C++}. De hecho, que detrás de esta interfaz
-se encuentra la estructura de datos de splay tree es algo invisible al 
-usuario. Una diferencia a destacar con respecto la clase set de la 
-\textit{C++ STL} es que se incluye el método \textit{print()}. Esto es para
-poder visualizar en consola la estructura completa del conjunto, cómo se
-almacenan y cómo varía su situación relativa con las distintas operaciones, 
-más allá del uso como conjunto de la clase. Cabe destacar también de la 
-implementación las siguientes características:
+El diseño se ha realizado así para asemejarse a la clase \textit{set} de la 
+librería estándar de \textit{C++}. De hecho, que detrás de esta interfaz se 
+encuentra la estructura de datos de splay tree es algo invisible al usuario. 
+Una diferencia a destacar con respecto la clase set de la \textit{C++ STL} es 
+que se incluye el método \textit{print()}. Esto es para poder visualizar en 
+consola la estructura completa del conjunto, cómo se almacenan y cómo varía la
+posición de los nodos al ejecutar las distintas operaciones, más allá del uso 
+como conjunto de la clase. Cabe destacar también de la implementación las 
+siguientes características:
 
 \begin{enumerate}
 \setlength{\parskip}{0mm}         % Distance among paragraphs
@@ -185,8 +185,8 @@ implementación las siguientes características:
       dos nodos con elementos iguales. Para garantizar esto es necesario 
       también que se de el punto número dos.
 \item El usuario puede decidir el orden que rige la estructura siempre que 
-      este constituya un orden estricto sobre el conjunto de posibles 
-      elementos. La estructura implementada esta preparada para funcionar con 
+      este constituya un orden total sobre el conjunto de posibles 
+      elementos. La estructura implementada está preparada para funcionar con 
       un comparador cualquiera pero puede llegar a estados inconsistentes si 
       esta condición no se satisface.
 \item A diferencia de otras implementaciones de splay trees, no se contempla
@@ -196,22 +196,20 @@ implementación las siguientes características:
       puede ser implementada sin añadir atributos adicionales a los nodos del
       árbol (más allá del elemento y los punteros a ambos hijos). Por una 
       mayor sencillez en la implementación he optado por añadir un atributo,
-      un puntero al padre para poder actualizar sus atributos de forma 
+      un puntero al nodo padre para poder actualizar sus atributos de forma 
       sencilla en \textit{O(1)}.
      
 \end{enumerate}
 
-
 \section{Algoritmos:}
-
 \subsection{Atributos de la clase:}
 
 Como ya hemos dicho, hemos optado por añadir como atributo propio de cada nodo
 un puntero a su nodo padre para simplificar el código. También hemos optado
 por que tanto la clase nodo (invisible al usuario) como los atributos de la 
 clase sean \textit{protected} y no \textit{private} en vista a posibles 
-modificaciones futuras. Abajo se muestra la declaración de la clase sin
-métodos.
+modificaciones futuras y extensiones de funcionalidad mediante herencia. Abajo
+se muestra la declaración de la clase sin métodos.
 
 \begin{lstlisting}
 template<typename T, typename Comp = std::less<T>>
@@ -233,21 +231,19 @@ class splay_tree
     Comp  lower;
 }; //splay_tree
 \end{lstlisting}
-
 \subsection{Búsqueda:}
 
 Se realiza igual que en el caso de un árbol binario de búsqueda convencional 
 con la salvedad de que se realiza un splay del nodo encontrado o el último 
 nodo visitado si el elemento no se encuentra en el árbol. Recuerdo que 
 \textit{lower} es un comparador que actua sobre los elementos de tipo 
-\textit{T}. Se aprecia en este método por qué el comparador debe crear un 
-orden estricto en el conjunto de posibles valores de \textit{T}. En el bucle 
-de descenso desde la raíz, buscando el elemento recibido como parámetro, se 
-realiza una comparación nodo a nodo. Si el parámetro es menor que el elemento 
-del nodo, la búsqueda continúa por el hijo izquierdo del nodo. Si el parámetro
-es mayor, continúa por el hijo derecho. Si un elemento no es mayor ni menor 
-que el recibido como parámetro, el método sobreentiende que es igual. Es por 
-esto que el comparador debe establecer un orden total estricto. 
+\textit{T} (ver el código añadido abajo). Se aprecia en este método por qué el comparador debe crear un orden total en el conjunto de posibles valores de 
+\textit{T}. En el bucle de descenso desde la raíz, buscando el elemento 
+recibido como parámetro, se realiza una comparación nodo a nodo. Si el 
+parámetro es menor que el elemento del nodo, la búsqueda continúa por el hijo 
+izquierdo del nodo. Si el parámetro es mayor, continúa por el hijo derecho. Si un elemento no es mayor ni menor que el recibido como parámetro, el método 
+sobreentiende que es igual. Es por esto que el comparador debe establecer un 
+orden total estricto. 
 
 \begin{lstlisting}
 template<typename T, typename Comp>
@@ -269,7 +265,6 @@ bool splay_tree<T, Comp>::find(T const& elem)
   return false;
 }
 \end{lstlisting}
-
 \subsection{Inserción:}
 
 La inserción es igual que en un árbol binario de búsqueda con la salvedad de 
@@ -280,9 +275,11 @@ posibilidad de reducir la inserción de elementos a la unión del árbol actual
 con un árbol con un único nodo, el del elemento a insertar. Sí que se podía
 optar por una implementación recursiva en vez de iterativa a la hora de 
 descender por los nodos del árbol. En mi caso he optado por una implementación
-iterativa pues en la implementación recursiva, al llegar a un nodo nulo al
+iterativa pues en la implementación recursiva, al llegar a un puntero nulo al
 final del descenso no se puede saber cuál es su nodo padre si no es añadiendo
-un atributo más como parámetro. 
+un atributo más como parámetro. La implementación recursiva alternativa 
+desarrollada puede verse en el fichero \textit{splay\_tree.h} como comentario
+en el código.
 
 \begin{lstlisting}
 template<typename T, typename Comp>
@@ -313,8 +310,18 @@ bool splay_tree<T, Comp>::insert(T const& elem)
   splay(node);  return true;
 }
 \end{lstlisting}
-
 \subsection{Borrado:}
+
+Al igual que en los métodos anteriores, la filosofía es la misma que en los
+árboles binarios convencionales. De nuevo la diferencia la marca la llamada al
+método splay al terminar el borrado. En algunas variantes de splay trees, se 
+opta por flotar primero el nodo a borrar a la raíz y luego borrarlo. En mi 
+caso he optado por primero borrar el elemento (de estar en el árbol) y
+entonces flotar su nodo padre. El elemento borrado se reemplaza por el menor 
+elemento del conjunto mayor que el del nodo a borrar para mantener la 
+estructura de árbol binario de búsqueda. Si el elemento a borrar no se 
+encuentra en el conjunto se llama a splay con el último nodo visitado durante 
+la búsqueda del elemento.
 
 \begin{lstlisting}
 template<typename T, typename Comp>
@@ -331,16 +338,19 @@ bool splay_tree<T, Comp>::erase(T const& elem)
    else break; // Llegamos al nodo a borrar
   }
 
-  // Si el elemento no esta, flotamos el padre y terminamos
-  if(node == nullptr) {if(father) splay(father); return false;}
-
-  /*
+  /*   ACLARACIONES:
+  *
   *    A partir de este momento node apunta al nodo que queremos
   *    borrar, vamos a distinguir casos segun su situacion.
   *
-  *    El unico nodo con padre nulo es la raiz, usamos este 
-  *    criterio para saber cuando actualizar la raiz.
+  * -> Los punteros se pueden interpretar como booleanos. En C++ 
+  *    un puntero equivale a falso si y solo si es nulo.
+  * -> El unico nodo con padre nulo es la raiz. La condicion
+  *    (father == nullptr) equivale a (node == root).
   */
+  
+    // Si el elemento no esta, flotamos el padre y terminamos
+  if(node == nullptr) {if(father) splay(father); return false;}
   
   if(!node->left && !node->right)   // CASO 1: Hoja
   {
@@ -379,32 +389,41 @@ bool splay_tree<T, Comp>::erase(T const& elem)
   }
   else                              // CASO 4: Ambos hijos existen
   {
-    // 
+    // Hallamos el elemento que reemplace el nodo a borrar
     Node* lessGreater = node->right; 
     while(lessGreater->left) lessGreater = lessGreater->left;
 
-    // We 'disconnect' it temporally from its position
+    // Lo desconectamos de su posicion
     if(lessGreater->right)
     {
       lessGreater->right->parent = lessGreater->parent;
 
-      if(lessGreater == lessGreater->parent->right) lessGreater->parent->right = lessGreater->right;
-      else                                          lessGreater->parent->left  = lessGreater->right;
+      if(lessGreater == lessGreater->parent->right) 
+            lessGreater->parent->right = lessGreater->right;
+      else                                          
+            lessGreater->parent->left  = lessGreater->right;
     }
     else
     {
-      if(lessGreater == lessGreater->parent->right)  lessGreater->parent->right = nullptr;
-      else                                           lessGreater->parent->left  = nullptr;
+      if(lessGreater == lessGreater->parent->right)  
+            lessGreater->parent->right = nullptr;
+      else  
+            lessGreater->parent->left  = nullptr;
     }
 
-    // We replace node to delete with the less greater element
-    lessGreater->left  = node->left;   if(node->left)   node->left->parent = lessGreater;
-    lessGreater->right = node->right;  if(node->right)  node->right->parent= lessGreater;
+    // Lo conectamos en la posicion del nodo a borrar
+    lessGreater->left  = node->left;   
+    lessGreater->right = node->right;  
     lessGreater->parent= node->parent;
-
+    
+    if(node->left)   node->left->parent = lessGreater;
+    if(node->right)  node->right->parent= lessGreater;
+    
     if(node->parent)
-      {if(node == node->parent->left) node->parent->left = lessGreater;
-       else                           node->parent->right= lessGreater;}
+      {if(node == node->parent->left) 
+            node->parent->left = lessGreater;
+       else                           
+            node->parent->right= lessGreater;}
     else
       root = lessGreater;
   }
@@ -413,8 +432,16 @@ bool splay_tree<T, Comp>::erase(T const& elem)
   return true;
 }
 \end{lstlisting}
-
 \subsection{Rotación de un nodo:}
+
+Se contemplan rotaciones hacia la izquierda o hacia la derecha en función
+de si el nodo es reemplazado por su hijo derecho o izquierdo. Estas son 
+iguales a las rotaciones de los árboles AVL u otros árboles binarios 
+balanceados pero, claro está, actualizando también el atributo añadido a los
+nodos, el nodo padre al que apuntan. Se incluye el código correspondiente a 
+una rotación hacia la izquierda, siendo el código de la rotación izquierda
+simétrico.
+
 \begin{lstlisting}
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::rotateRight(Node* node)
@@ -441,9 +468,18 @@ void splay_tree<T, Comp>::rotateRight(Node* node)
   }
 }
 \end{lstlisting}
-
-
 \subsection{Splay:}
+
+El algoritmo lleva el nodo recibido como parámetro a la raiz manteniendo la
+estructura de árbol binario de búsqueda. Para esto, mientras el nodo no se
+encuentra en la raíz, si es hijo directo de la raíz, realiza la rotación 
+correspondiente para desplazar la raiz colocando al nodo. Si por contra el
+nodo tiene un nodo abuelo combina dos rotaciones que llevan el el nodo a 
+flotar a dos alturas menos. Al no hacer uso del comparador, tanto este método
+como las rotaciones que emplea son consistentes a pesar de que el orden 
+inferido del comparador no sea total.
+
+
 \begin{lstlisting}
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::splay(Node* node)
@@ -453,25 +489,25 @@ void splay_tree<T, Comp>::splay(Node* node)
 
   while(node->parent)
   {
-    if(!node->parent->parent)  //Direct child from root!
+    if(!node->parent->parent)  // Hijo directo de la raiz
     {
       if(node->parent->left == node)  rotateRight(node->parent);
       else                            rotateLeft(node->parent);
     }
-    else                       //Node has grandfather
+    else                       // El nodo tiene nodo abuelo
     {
       Node* grandParent = node->parent->parent;
 
-      if(grandParent->left       && node == grandParent->left->left)    //Zig-zig
+      if(grandParent->left       && node==grandParent->left->left)
        {rotateRight(grandParent);
         rotateRight(node->parent);}
-      else if(grandParent->right && node == grandParent->right->right)  //Zag-zag
+      else if(grandParent->right && node==grandParent->right->right)
         {rotateLeft(grandParent);
          rotateLeft(node->parent);}
-      else if(grandParent->left  && node == grandParent->left->right)   //Zag-Zig
+      else if(grandParent->left  && node==grandParent->left->right)
         {rotateLeft(node->parent);
          rotateRight(grandParent);}
-      else if(grandParent->right && node == grandParent->right->left)   //Zig-zag
+      else if(grandParent->right && node==grandParent->right->left)
         {rotateRight(node->parent);
          rotateLeft(grandParent);}
       else
@@ -481,44 +517,6 @@ void splay_tree<T, Comp>::splay(Node* node)
 }
 \end{lstlisting}
 
-\section{Analysis}
-
-In this section you will need to show your experimental results. Use tables and
-graphs when it is possible. Table~\ref{tbl:bins} is an example.
-
-\begin{table}[ht]
-\begin{center}
-\caption{Every table needs a caption.}
-\label{tbl:bins} % spaces are big no-no withing labels
-\begin{tabular}{|cc|} 
-\hline
-\multicolumn{1}{|c}{$x$ (m)} & \multicolumn{1}{c|}{$V$ (V)} \\
-\hline
-0.0044151 &   0.0030871 \\
-0.0021633 &   0.0021343 \\
-0.0003600 &   0.0018642 \\
-0.0023831 &   0.0013287 \\
-\hline
-\end{tabular}
-\end{center}
-\end{table}
-
-Fig.~\ref{fig:samplesetup} and Fig.~\ref{fig:exp_plots}.
-
-\begin{figure}[ht] 
-  \centering
-      \includegraphics[width=0.5\columnwidth]{sr_squeezing_vs_detuning}
-
-% some figures do not need to be too wide
-        \caption{
-                \label{fig:exp_plots}  
-                Every plot must have axes labeled.
-        }
-\end{figure}
-
-
-\section{Conclusions}
-Here you briefly summarize your findings.
 
 %++++++++++++++++++++++++++++++++++++++++
 % References section will be created automatically 
