@@ -91,10 +91,10 @@ backgroundcolor=\color{gray75},
 \begin{abstract}
 
 Trabajo realizado en el marco de la asignatura \textit{Métodos algorítmicos 
-en resolución de problemas}. Se incluyen sendas implementaciones de árboles 
-de búsqueda autoajustables en \textit{C++} y \textit{Java} junto con detalles
-de la implementación, aclaraciones y posibles modificaciones para poder 
-adaptar esta curiosa estructura de datos a otros usos.
+en resolución de problemas}. El objetivo de este documento es el de explicar
+las decisiones de diseño tomadas en el desarrollo del código y aclarar 
+distintos aspectos de las implementaciones en \textit{C++} y \textit{Java} 
+que puedan generar confusión.
 
 \end{abstract}
 
@@ -106,15 +106,15 @@ adaptar esta curiosa estructura de datos a otros usos.
 Los splay trees aparecen en 1985 ideados por Robert Tarjan y Daniel Selator.
 Estos no son sino árboles binarios de búsqueda con una peculiaridad, una 
 operación interna sobre los nodos llamada "\textit{splay}". Esta operación, 
-invisible en todo momento al usuario, actúa sobre un nodo del árbol con el 
-resultado de transformar el árbol de partida en un árbol binario de búsqueda 
-equivalente (manteniendo exactamente los elementos iniciales) en el cual la 
-raiz es el nodo seleccionado. Intuitivamente, esta operación se emplea para 
-conseguir que elementos recientemente requeridos se encuentren cerca de la 
-raíz y, por tanto, sea más rápido volver a acceder a ellos. De aquí proviene
-su apellido "\textit{autoajustable}" pues esta operación de splay consigue 
-que el árbol de preferencia en alturas menores a elementos más empleados en
-cualquier secuencia de operaciones.
+invisible en todo momento al usuario, recibe un nodo como parámetro y 
+transforma el árbol de partida en un árbol binario de búsqueda equivalente 
+(manteniendo exactamente los elementos iniciales) en el cual la raíz es el 
+nodo seleccionado. Intuitivamente, esta operación se emplea para conseguir 
+que elementos recientemente requeridos se encuentren cerca de la raíz y, por 
+tanto, sea más rápido volver a acceder a ellos. De aquí proviene su apellido 
+"\textit{autoajustable}" pues esta operación de splay consigue que el árbol 
+de preferencia en alturas menores a elementos más empleados en cualquier 
+secuencia de operaciones.
 
 El principal inconveniente de esta estructura de datos, sin embargo, es que, 
 a diferencia de los árboles AVL o los árboles Red-Black, no se mantiene 
@@ -128,8 +128,9 @@ secuencia de inserciones, borrados y búsquedas de elementos estas operaciones
 tienen un coste amortizado logarítmico. De hecho, se puede aprovechar esta 
 propiedad de los splay trees de que elementos accedidos recientemente son 
 fácilmente accesibles para conseguir una mayor eficiencia bajo ciertas 
-circunstancias (no aleatorias). Aquí nos limitaremos a la implementación,
-para una mayor comprensión consultar la bibliografía.
+circunstancias (no aleatorias). Aquí nos limitaremos a explicar los detalles 
+de la implementación presentada, para una mayor comprensión recomiendo 
+consultar la bibliografía al final del documento.
 
 %\cite{melissinos, Cyr, Wiki}   % Para tener un ejemplo de cómo citar
 
@@ -237,11 +238,13 @@ Se realiza igual que en el caso de un árbol binario de búsqueda convencional
 con la salvedad de que se realiza un splay del nodo encontrado o el último 
 nodo visitado si el elemento no se encuentra en el árbol. Recuerdo que 
 \textit{lower} es un comparador que actua sobre los elementos de tipo 
-\textit{T} (ver el código añadido abajo). Se aprecia en este método por qué el comparador debe crear un orden total en el conjunto de posibles valores de 
+\textit{T} (ver el código añadido abajo). Se aprecia en este método por qué el 
+comparador debe crear un orden total en el conjunto de posibles valores de 
 \textit{T}. En el bucle de descenso desde la raíz, buscando el elemento 
 recibido como parámetro, se realiza una comparación nodo a nodo. Si el 
 parámetro es menor que el elemento del nodo, la búsqueda continúa por el hijo 
-izquierdo del nodo. Si el parámetro es mayor, continúa por el hijo derecho. Si un elemento no es mayor ni menor que el recibido como parámetro, el método 
+izquierdo del nodo. Si el parámetro es mayor, continúa por el hijo derecho. Si 
+un elemento no es mayor ni menor que el recibido como parámetro, el método 
 sobreentiende que es igual. Es por esto que el comparador debe establecer un 
 orden total estricto. 
 
@@ -320,7 +323,7 @@ caso he optado por primero borrar el elemento (de estar en el árbol) y
 entonces flotar su nodo padre. El elemento borrado se reemplaza por el menor 
 elemento del conjunto mayor que el del nodo a borrar para mantener la 
 estructura de árbol binario de búsqueda. Si el elemento a borrar no se 
-encuentra en el conjunto se llama a splay con el último nodo visitado durante 
+encuentra en el conjunto se llama a splay con el último nodo visitado durante
 la búsqueda del elemento.
 
 \begin{lstlisting}
@@ -517,6 +520,120 @@ void splay_tree<T, Comp>::splay(Node* node)
 }
 \end{lstlisting}
 
+\section{Tests:}
+Por mayor sencillez a la hora de comprobar el correcto funcionamiento de la 
+clase he incluido dos tests, uno manual y otro automático. Esta sección tiene
+el objetivo de explicar el funcionamiento de estos para que puedan ser 
+ejecutados por cualquier persona con interés en apreciar los múltiples cambios
+de estructura de los splay trees en una secuencia de operaciones. Se puede
+también fácilmente incluir mediciones del tiempo de ejecución en el test 
+automático para convencerse de que el coste amortizado de las operaciones es 
+logarítmico.
+
+Se incluye abajo el código correspondiente para ejecutar un test manual de la
+clase \textit{splay\_tree}. Este test lee por consola un código de operación
+y ejecuta la operación correspondiente:
+
+\setlength{\parskip}{0mm}         % Distance among paragraphs
+\begin{itemize}
+
+\item -1 para terminar el test.
+\item  0 para mostrar el árbol.
+\item  1 para buscar un elemento (se lee a continuación).
+\item  2 para insertar un elemento (se lee a continuación).
+\item  3 para borrar un elemento (se lee a continuación).
+     
+\end{itemize}
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+\begin{lstlisting}
+#include "splay_tree.h"
+#include <cstdlib>
+#include <time.h>
+using namespace std;
+
+int main()
+{
+  splay_tree<int> arbol;
+  int  opcode, aux; cin >> opcode;
+
+  while(opcode != -1)
+  {
+    cin >> aux;
+
+    try
+    {
+      if(opcode == 0)     {arbol.print(); cout << endl;}
+      else if(opcode == 1) arbol.find(aux);
+      else if(opcode == 2) arbol.insert(aux);
+      else if(opcode == 3) arbol.erase(aux);
+      else if(opcode == 4) {if(arbol.empty()) cout << "VACIO\n";
+                            else           cout << "NO VACIO\n";}
+    }
+    catch (const char* msg)
+    {
+      cerr << msg << endl;
+    }
+    catch (exception &e)
+    {
+      cout << e.what() << endl;
+    }
+
+    cin >> opcode;
+  }
+}
+\end{lstlisting}
+
+Se muestra a continuación el código correspondiente al test automático. 
+Realiza primero un número de inserciones de elementos aleatorios, luego una
+secuencia de búsquedas de elementos también aleatorios y en el mismo rango que
+en el caso anterior y por último una serie de borrados (en el ejemplo 1000).
+Para terminar muestra los elementos restantes en el árbol. Si sucede algún 
+error durante el test se muestra por consola la excepción recibida.
+
+\begin{lstlisting}
+#include "splay_tree.h"
+#include <cstdlib>
+#include <time.h>
+using namespace std;
+
+int main()
+{
+  splay_tree<int> arbol;
+  int upLimit = 1000, nextValue;
+  srand(time(NULL));
+
+  try
+  {
+    for(int i = 0; i < 1000; i++)
+    {
+      nextValue = rand()%upLimit;
+      arbol.insert(nextValue);
+    }
+
+    for(int i = 0; i < 1000; i++)
+    {
+      nextValue = rand()%upLimit;
+      arbol.find(nextValue);
+    }
+
+    for(int i = 0; i < 4000; i++)
+    {
+      nextValue = rand()%upLimit;
+      arbol.erase(nextValue);
+    }
+  }
+  catch (const char* msg)  {
+    cerr << msg << endl;
+  }
+  catch (exception &e)  {
+    cout << e.what() << endl;
+  }
+
+  arbol.print(); 
+}
+\end{lstlisting}
+
 
 %++++++++++++++++++++++++++++++++++++++++
 % References section will be created automatically 
@@ -528,17 +645,22 @@ void splay_tree<T, Comp>::splay(Node* node)
 
 \begin{thebibliography}{99}
 
-\bibitem{melissinos}
-A.~C. Melissinos and J. Napolitano, \textit{Experiments in Modern Physics},
-(Academic Press, New York, 2003).
+\bibitem{ApuntesRicardo}
+Ricardo Peña, \textit{Árboles de búsqueda autoajustables (Splay trees)}, 
+(Apuntes de la asignatura "Métodos algorítmicos en resolución de problemas",
+Facultad de informática, Universidad Complutense, Madrid, curso 2015/16).
 
-\bibitem{Cyr}
-N.\ Cyr, M.\ T$\hat{e}$tu, and M.\ Breton,
-% "All-optical microwave frequency standard: a proposal,"
-IEEE Trans.\ Instrum.\ Meas.\ \textbf{42}, 640 (1993).
+\bibitem{Horowitz}
+E. Horowitz, S. Sahni, and D. Mehta. \textit{Fundamentals of Data 
+Structures in C++}. Computer Science Press, 4th edition, 1997. Capítulo 10.7.
 
-\bibitem{Wiki} \emph{Expected value},  available at
-\texttt{http://en.wikipedia.org/wiki/Expected\_value}.
+\bibitem{Codeforces}
+\textit{Splay tree and it's implementation},  available at 
+\texttt{https://codeforces.com/blog/entry/18462}.
+
+\bibitem{Wikipedia} 
+\textit{Splay tree},  available at 
+\texttt{http://en.wikipedia.org/wiki/Splay\_tree}.
 
 \end{thebibliography}
 
