@@ -1,3 +1,12 @@
+/*
+*   Francisco Javier Blázquez Martínez   ~  frblazqu@ucm.es
+*
+*   Doble grado en Matemáticas - Ingeniería informática
+*   Universidad complutense, Madrid
+*
+*   Descripción: Implementación de árboles de búsqueda autoajustables.
+*/
+
 package ucm.fdi.marp;
 
 public class SplayTree<T extends Comparable<T>>
@@ -20,22 +29,36 @@ public class SplayTree<T extends Comparable<T>>
 		}
 	}
 
-	public void stupid_test()
-	{
-		if(root == null)
-			System.out.println("La raíz es nula");
-		else if(root.left == null)
-			System.out.println("La raiz no tiene hijo izquierdo");
-	}
-
 	public SplayTree()
 	{
 		root  = null;
 	}
+	
 	public boolean empty()
 	{
 		return root == null;
 	}
+	
+	public boolean find(T elem)
+	{
+	  Node father = null;
+	  Node node   = root;
+
+	  while(node != null)
+	  {
+	    father = node;
+
+	         if(elem.compareTo(node.elem) < 0)     node = node.left;
+	    else if(elem.compareTo(node.elem) > 0)     node = node.right;
+	    else {splay(node); return true;} // The element is already in the tree
+	  }
+
+	  if(father != null)
+		  splay(father);
+
+	  return false;
+	}
+	
 	public boolean insert(T elem)
 	{
 	  Node father = null;
@@ -61,25 +84,7 @@ public class SplayTree<T extends Comparable<T>>
 	  splay(node);  return true;
 
 	}
-	public boolean find(T elem)
-	{
-	  Node father = null;
-	  Node node   = root;
 
-	  while(node != null)
-	  {
-	    father = node;
-
-	         if(elem.compareTo(node.elem) < 0)     node = node.left;
-	    else if(elem.compareTo(node.elem) > 0)     node = node.right;
-	    else {splay(node); return true;} // The element is already in the tree
-	  }
-
-	  if(father != null)
-		  splay(father);
-
-	  return false;
-	}
 	public boolean erase(T elem)
 	{
 	  Node father = null;
@@ -126,7 +131,7 @@ public class SplayTree<T extends Comparable<T>>
 	        else                          node.parent.right= node.left;
 	      }
 	  }
-	  else                              // BOTH CHILDREN EXISTS
+	  else                              // BOTH CHILDREN EXIST
 	  {
 	    // We get the less greater
 	    Node lessGreater = node.right; while(lessGreater.left != null) lessGreater = lessGreater.left;
@@ -162,43 +167,12 @@ public class SplayTree<T extends Comparable<T>>
 
 	  return true;
 	}
+	
 	public void    print()
 	{
 		print(root, 0);
 	}
-
-	protected void splay(Node node)
-	{
-		if(node == null)
-		    throw new NullPointerException("Splay over null node!");
-		  while(node.parent != null)
-		  {
-		    if(node.parent.parent == null)  //Direct child from root!
-		    {
-		      if(node.parent.left == node)  rotateRight(node.parent);
-		      else                          rotateLeft(node.parent);
-		    }
-		    else                       //Node has grandfather
-		    {
-		      Node grandParent = node.parent.parent;
-
-		      if(grandParent.left != null       && node == grandParent.left.left)    //Zig-zig
-		       {rotateRight(grandParent);
-		        rotateRight(node.parent);}
-		      else if(grandParent.right != null && node == grandParent.right.right)  //Zag-zag
-		        {rotateLeft(grandParent);
-		         rotateLeft(node.parent);}
-		      else if(grandParent.left  != null  && node == grandParent.left.right)   //Zag-Zig
-		      	{rotateLeft(node.parent);
-		         rotateRight(grandParent);}
-		      else if(grandParent.right != null && node == grandParent.right.left)   //Zig-zag
-		        {rotateRight(node.parent);
-		         rotateLeft(grandParent);}
-		      else
-		        throw new IllegalStateException("Illegal state reached during splay operation!");
-		    }
-		  }
-	}
+	
 	protected void rotateRight(Node node)
 	{
 		if(node == null)
@@ -222,6 +196,7 @@ public class SplayTree<T extends Comparable<T>>
 		      root = leftChild;
 		  }
 	}
+	
 	protected void rotateLeft(Node node)
 	{
 		  if(node == null)
@@ -245,11 +220,45 @@ public class SplayTree<T extends Comparable<T>>
 		      root = rightChild;
 		  }
 	}
+
+	protected void splay(Node node)
+	{
+		if(node == null)
+		    throw new NullPointerException("Splay over null node!");
+		  while(node.parent != null)
+		  {
+		    if(node.parent.parent == null)  //Direct child from root!
+		    {
+		      if(node.parent.left == node)  rotateRight(node.parent);
+		      else                          rotateLeft(node.parent);
+		    }
+		    else                            //Node has grandfather
+		    {
+		      Node grandParent = node.parent.parent;
+
+		      if(grandParent.left != null       && node == grandParent.left.left)    //Zig-zig
+		       {rotateRight(grandParent);
+		        rotateRight(node.parent);}
+		      else if(grandParent.right != null && node == grandParent.right.right)  //Zag-zag
+		        {rotateLeft(grandParent);
+		         rotateLeft(node.parent);}
+		      else if(grandParent.left  != null  && node == grandParent.left.right)   //Zag-Zig
+		      	{rotateLeft(node.parent);
+		         rotateRight(grandParent);}
+		      else if(grandParent.right != null && node == grandParent.right.left)   //Zig-zag
+		        {rotateRight(node.parent);
+		         rotateLeft(grandParent);}
+		      else
+		        throw new IllegalStateException("Illegal state reached during splay operation!");
+		    }
+		  }
+	}
+	
 	public void    print(Node node, int level)
 	{
 	  if(node != null)
 	  {
-	    System.out.print(level + ":" + node.elem + " ");
+	    System.out.print(node.elem + ":" + level + " ");
 
 	    print(node.left,  level+1);
 	    print(node.right, level+1);

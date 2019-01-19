@@ -1,10 +1,10 @@
 /*
 *   Francisco Javier Blázquez Martínez   ~  frblazqu@ucm.es
 *
-*   Double degree in Mathematics - Computer engineering
-*   Computense University, Madrid
+*   Doble grado en Matemáticas - Ingeniería informática
+*   Universidad complutense, Madrid
 *
-*   Description: Splay trees implementation.
+*   Descripción: Implementación de árboles de búsqueda autoajustables.
 */
 
 #ifndef SPLAY_TREE_H
@@ -20,23 +20,23 @@ class splay_tree
   public:
     splay_tree()                  {root = nullptr; lower = Comp();}
    ~splay_tree()                  {free_up_memory(root);}
-
+   
     void print()                  {print(root, 0);}
     bool empty()                  {return root == nullptr;}
-    void stupid_test()            {splay(nullptr);}
 
     //For iterative implementations
     bool insert(T const& elem);
     bool erase(T const& elem);
     bool find(T const& elem);
 
-    //For recursive implementations
+    //For recursive implementations (in disuse)
     //bool find(Node* node, Node* father, T const& elem);
     //bool insert(Node* &node, Node* father, T const& elem);
     //bool erase(Node* &node, Node* father, T const& elem);
 
   protected:
 
+    // Node structure
     struct Node
     {
       T     elem;
@@ -47,17 +47,40 @@ class splay_tree
       Node(Node* l, T const& e, Node* r, Node* p) : elem(e),left(l),right(r),parent(p) {}
     };
 
+    // Class attributes
     Node* root;
     Comp  lower;
 
-    void splay(Node* node);                                 // Brings node pointed to the root keeping binary tree structure
+    // Methods using Node pointers, hidden from users
+    void splay(Node* node);                                 // Brings node pointed to the root keeping BST structure
     void rotateRight(Node* node);                           // Rotates right from node pointed
     void rotateLeft(Node* node);                            // Rotates left  from node pointed
-
     void free_up_memory(Node* node);                        // Frees up the dinamic memory occupied
-    void print(Node* node, int level);                      // Just to depurate the code
+    void print(Node* node, int level);                      // Just to depurate the code (preorder with level position)
 };
 
+template<typename T, typename Comp>
+void splay_tree<T, Comp>::print(Node* node, int level)
+{
+  if(node != nullptr)
+  {
+    std::cout << node->elem << ':' << level << " ";
+
+    print(node->left,  level+1);
+    print(node->right, level+1);
+  }
+}
+
+template<typename T, typename Comp>
+void splay_tree<T,Comp>::free_up_memory(Node* node)
+{
+  if(node != nullptr)
+  {
+    free_up_memory(node->left);
+    free_up_memory(node->right);
+    delete node;
+  }
+}
 
 template<typename T, typename Comp>
 void splay_tree<T, Comp>::rotateRight(Node* node)
@@ -138,11 +161,43 @@ void splay_tree<T, Comp>::splay(Node* node)
       else if(grandParent->right && node == grandParent->right->left)   //Zig-zag
         {rotateRight(node->parent);
          rotateLeft(grandParent);}
-      else
+      else                                                              //Non reachable state !!
         throw "Illegal state reached during splay operation!";
     }
   }
 }
+
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::find(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node != nullptr)
+  {
+    father = node;
+
+         if(lower(elem, node->elem))     node = node->left;
+    else if(lower(node->elem, elem))     node = node->right;
+    else {splay(node); return true;} // The element is already in the tree
+  }
+
+  if(father != nullptr) splay(father);
+
+  return false;
+}
+
+/*
+*   Recursive implementation:
+*
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::find(Node* node, Node* father, T const& elem)
+{
+  if(node == nullptr)               {if(father) splay(father); return false;}
+  else if(lower(node->elem, elem))   return search(node->right, node, elem);
+  else if(lower(node->elem, elem))   return search(node->left,  node, elem);
+  else                              {splay(node);   return true;}
+}
+*/
 
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::insert(T const& elem)
@@ -170,6 +225,8 @@ bool splay_tree<T, Comp>::insert(T const& elem)
 }
 
 /*
+*   Recursive implementation:
+*
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::insert(Node* &node, Node* father, T const& elem)
 {
@@ -186,38 +243,6 @@ bool splay_tree<T, Comp>::insert(Node* &node, Node* father, T const& elem)
 */
 
 template<typename T, typename Comp>
-bool splay_tree<T, Comp>::find(T const& elem)
-{
-  Node* father = nullptr; Node* node = root;
-
-  while(node != nullptr)
-  {
-    father = node;
-
-         if(lower(elem, node->elem))     node = node->left;
-    else if(lower(node->elem, elem))     node = node->right;
-    else {splay(node); return true;} // The element is already in the tree
-  }
-
-  if(father != nullptr) splay(father);
-
-  return false;
-}
-
-/*
-template<typename T, typename Comp>
-bool splay_tree<T, Comp>::search(Node* node, Node* father, T const& elem)
-{
-  // WARNING!!
-  // Case when node is the rooot is not controlled!!
-  if(node == nullptr)               {splay(father); return false;}
-  else if(lower(node->elem, elem))   return search(node->right, node, elem);
-  else if(lower(node->elem, elem))   return search(node->left,  node, elem);
-  else                              {splay(node);   return true;}
-}
-*/
-
-template<typename T, typename Comp>
 bool splay_tree<T, Comp>::erase(T const& elem)
 {
   Node* father = nullptr; Node* node = root;
@@ -226,7 +251,7 @@ bool splay_tree<T, Comp>::erase(T const& elem)
   {
          if(lower(elem, node->elem))   {father = node; node = node->left;}
     else if(lower(node->elem, elem))   {father = node; node = node->right;}
-    else break; // node points to a node with elem inside
+    else break; // "node" points to a node with "elem" parameter
   }
 
   if(node == nullptr) {if(father) splay(father); return false;}
@@ -296,21 +321,18 @@ bool splay_tree<T, Comp>::erase(T const& elem)
 }
 
 /*
+*   Recursive implementation:
+*
 template<typename T, typename Comp>
 bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
 {
-  // WARNING!!
-  // Case when node is the rooot is not controlled!!
   if(node == nullptr)              {splay(father); return false;}
   else if(lower(node->elem, elem))  return erase(node->right,node, elem);
   else if(lower(elem, node->elem))  return erase(node->left, node, elem);
   else // node points the node we want to delete!
   {
-    // Before the deletion we are going to preserve the binary tree structure
     if(!node->right && !node->left) // Leaf case
     {
-      std::cout << "Borrando una hoja\n";
-
       if(node->parent == nullptr) root = nullptr;
       else
       {
@@ -320,8 +342,6 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
     }
     else if(!node->right)           // Node to delete hasn't right subtree
     {
-      std::cout << "Borrando un nodo sin hijo derecho\n";
-
       if(node->parent == nullptr) {root = node->left;  root->parent = nullptr;}
       else
       {
@@ -332,8 +352,6 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
     }
     else if(!node->left)            // Node to delete hasn't left  subtree
     {
-      std::cout << "Borrando un nodo sin hijo izquierdo\n";
-
       if(node->parent == nullptr) {root = node->right; root->parent = nullptr;}
       else
       {
@@ -344,7 +362,6 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
     }
     else                            // We have right and left subtree
     {
-      std::cout << "Borrando un nodo de los chungos\n";
       // We get the less greater
       Node* lessGreater = node->right; while(lessGreater->left) lessGreater = lessGreater->left;
 
@@ -381,28 +398,5 @@ bool splay_tree<T, Comp>::erase(Node* &node, Node* father, T const& elem)
   }
 }
 */
-
-template<typename T, typename Comp>
-void splay_tree<T, Comp>::print(Node* node, int level)
-{
-  if(node != nullptr)
-  {
-    std::cout << level << ':' << node->elem << " ";
-
-    print(node->left,  level+1);
-    print(node->right, level+1);
-  }
-}
-
-template<typename T, typename Comp>
-void splay_tree<T,Comp>::free_up_memory(Node* node)
-{
-  if(node != nullptr)
-  {
-    free_up_memory(node->left);
-    free_up_memory(node->right);
-    delete node;
-  }
-}
 
 #endif //SPLAY_TREE_H

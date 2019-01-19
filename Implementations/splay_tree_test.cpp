@@ -7,7 +7,9 @@ int main()
 {
   splay_tree<int> arbol;
 
-  /* FOR MANUAL TESTING!
+  /* 
+  *     FOR MANUAL TESTING!
+  *
   int  opcode = 2, aux;
 
   while(opcode != -1)
@@ -35,7 +37,9 @@ int main()
     cin >> opcode;
   }*/
 
-  /* FOR AUTOMATIC TEST
+  /* 
+  *     FOR AUTOMATIC TESTING
+  *
   srand(time(NULL));
 
   int upLimit = 1000, nextValue;

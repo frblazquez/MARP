@@ -9,8 +9,9 @@ public class SplayTreeTest
 	public static void main(String args[])
 	{
 
-		/* FOR AUTOMATIC TEST
-
+		/* 
+		*       FOR AUTOMATIC TESTING
+		*
 		SplayTree<Integer> arbol = new SplayTree<Integer>();
 
 		Random rand = new Random();
@@ -44,8 +45,9 @@ public class SplayTreeTest
 
 		arbol.print(); */
 
-		/*	FOR MANUAL TEST
-
+		/*
+		*   	FOR MANUAL TESTING
+        *
 	    int  opcode = 2, aux;
 		Scanner in = new Scanner(System.in);
 
