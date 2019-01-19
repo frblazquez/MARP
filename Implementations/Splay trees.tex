@@ -103,16 +103,17 @@ que puedan generar confusión.
 %--------------------------------------------------------------------------
 \section{Introducción:}
 
-Los splay trees aparecen en 1985 ideados por Robert Tarjan y Daniel Selator.
+Los árboles binarios de búsqueda autoajustables (\textit{splay trees}) 
+aparecen en 1985 ideados por Robert Tarjan y Daniel Selator.
 Estos no son sino árboles binarios de búsqueda con una peculiaridad, una 
-operación interna sobre los nodos llamada "\textit{splay}". Esta operación, 
+operación interna sobre los nodos llamada ``\textit{splay}''. Esta operación, 
 invisible en todo momento al usuario, recibe un nodo como parámetro y 
 transforma el árbol de partida en un árbol binario de búsqueda equivalente 
 (manteniendo exactamente los elementos iniciales) en el cual la raíz es el 
 nodo seleccionado. Intuitivamente, esta operación se emplea para conseguir 
 que elementos recientemente requeridos se encuentren cerca de la raíz y, por 
 tanto, sea más rápido volver a acceder a ellos. De aquí proviene su apellido 
-"\textit{autoajustable}" pues esta operación de splay consigue que el árbol 
+``\textit{autoajustable}'' pues esta operación de splay consigue que el árbol 
 de preferencia en alturas menores a elementos más empleados en cualquier 
 secuencia de operaciones.
 
@@ -142,27 +143,27 @@ antes de comenzar la implementación concretar las operaciones que vamos a
 permitir ejecutar al usuario. En mi caso he optado por aplicar los splay 
 trees para crear una estrucura de datos de conjunto ordenado de elementos de
 tipo genérico, con un orden que puede ser especificado por el usuario.
-La interfaz pública del usuario se puede consultar en la tabla inferior.
+La interfaz pública de usuario se puede consultar en la tabla inferior.
 
 \begin{center}
 \begin{tabular}{|l|c|c|l|}
 
 	\hline
-	Operación & Coste & Caso peor & Descripción\\
+	\textbf{Operación} & \textbf{Coste} & \textbf{Caso peor} & \textbf{Descripción}\\
 	\hline
-    splay\_tree()    & O(1)     &  O(1)& Crea un conjunto vacío\\
+    splay\_tree()    & \textit{O(1)}     & \textit{O(1)} & Crea un conjunto vacío\\
 	\hline
-    \~splay\_tree()  & O(n)     & O(n) & Vacía el conjunto y libera la memoria\\ 
+    \~splay\_tree()  & \textit{O(n)}     & \textit{O(n)} & Vacía el conjunto y libera la memoria\\ 
 	\hline
-	bool empty()     & O(1)     & O(1) & Devuelve true si el conjunto está vacío\\
+	bool empty()     & \textit{O(1)}     & \textit{O(1)} & Devuelve true si el conjunto está vacío\\
 	\hline
-	bool insert(elem)& O(log(n))& O(n) & Devuelve true si inserta el elemento\\
+	bool insert(elem)& \textit{O(log(n))}& \textit{O(n)} & Devuelve true si inserta el elemento\\
 	\hline
-	bool erase(elem) & O(log(n))& O(n) & Devuelve true si elimina el elemento\\
+	bool erase(elem) & \textit{O(log(n))}& \textit{O(n)} & Devuelve true si elimina el elemento\\
 	\hline
-	bool find(elem)  & O(log(n))& O(n) & Devuelve true si \textit{elem} está en el conjunto\\
+	bool find(elem)  & \textit{O(log(n))}& \textit{O(n)} & Devuelve true si \textit{elem} está en el conjunto\\
 	\hline
-	void print()     & O(n)     & O(n) & Muestra en inorder los elementos y su altura\\
+	void print()     & \textit{O(n)}     & \textit{O(n)} & Muestra en preorder los elementos y su altura\\
 	\hline
 	
 \end{tabular}
@@ -323,8 +324,8 @@ caso he optado por primero borrar el elemento (de estar en el árbol) y
 entonces flotar su nodo padre. El elemento borrado se reemplaza por el menor 
 elemento del conjunto mayor que el del nodo a borrar para mantener la 
 estructura de árbol binario de búsqueda. Si el elemento a borrar no se 
-encuentra en el conjunto se llama a splay con el último nodo visitado durante
-la búsqueda del elemento.
+encuentra en el conjunto se llama al método splay con el último nodo visitado 
+durante la búsqueda del elemento.
 
 \begin{lstlisting}
 template<typename T, typename Comp>
@@ -474,13 +475,12 @@ void splay_tree<T, Comp>::rotateRight(Node* node)
 \subsection{Splay:}
 
 El algoritmo lleva el nodo recibido como parámetro a la raiz manteniendo la
-estructura de árbol binario de búsqueda. Para esto, mientras el nodo no se
-encuentra en la raíz, si es hijo directo de la raíz, realiza la rotación 
-correspondiente para desplazar la raiz colocando al nodo. Si por contra el
-nodo tiene un nodo abuelo combina dos rotaciones que llevan el el nodo a 
-flotar a dos alturas menos. Al no hacer uso del comparador, tanto este método
-como las rotaciones que emplea son consistentes a pesar de que el orden 
-inferido del comparador no sea total.
+estructura de árbol binario de búsqueda. Para esto, mientras el nodo no se sitúe en la raiz, si su nodo padre es la raíz, realiza una única rotación 
+para ocupar la posición de su nodo padre (rotación izquierda o derecha según
+corresponda). Si por contra el nodo tiene un ``nodo abuelo'' combina dos 
+rotaciones que llevan el el nodo a flotar a dos alturas menos. Al no hacer uso 
+del comparador, tanto este método como las rotaciones que emplea son 
+consistentes a pesar de que el orden inferido del comparador no sea total.
 
 
 \begin{lstlisting}
@@ -666,4 +666,3 @@ Structures in C++}. Computer Science Press, 4th edition, 1997. Capítulo 10.7.
 
 
 \end{document}
-
