@@ -1,0 +1,115 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+ 
+\newenvironment{problem}[2][Problema]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\usepackage[utf8]{inputenc}                 % Using Unicode encoding
+\usepackage[spanish]{babel}                 % Writing in Spanish language
+%\usepackage{listings}                       % For including C++ code
+\setlength{\parindent}{0mm}                 % Paragraph indentation null
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+%--------------------------------------------------------------------------
+%   PARA INCLUIR CÓDIGO C++ EN EL DOCUMENTO
+%--------------------------------------------------------------------------
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+\usepackage{listings}
+\lstset{ frame=Ltb,
+framerule=0pt,
+aboveskip=0.5cm,
+framextopmargin=3pt,
+framexbottommargin=3pt,
+framexleftmargin=0.4cm,
+framesep=0pt,
+rulesep=.4pt,
+backgroundcolor=\color{gray97},
+rulesepcolor=\color{black},
+%
+stringstyle=\ttfamily,
+showstringspaces = false,
+basicstyle=\small\ttfamily,
+commentstyle=\color{gray45},
+keywordstyle=\bfseries,
+%
+numbers=left,
+numbersep=15pt,
+numberstyle=\tiny,
+numberfirstline = false,
+breaklines=true,
+}
+
+% minimizar fragmentado de listados
+\lstnewenvironment{listing}[1][]
+{\lstset{#1}\pagebreak[0]}{\pagebreak[0]}
+
+\lstdefinestyle{consola}
+{basicstyle=\scriptsize\bf\ttfamily,
+backgroundcolor=\color{gray75},
+}
+
+\lstdefinestyle{C}
+{language=C,
+}
+
+\begin{document}
+ 
+\title{\textbf{Hoja 3 - Ejercicio 4}}
+\author{Francisco Javier Blázquez Martínez}
+\date{}
+\maketitle
+ 
+\begin{problem}{3.4}
+Enriquecer un montículo de Williams con las operaciones \textit{decrecerClave} y 
+\textit{aumentarClave} que disminuyan o aumenten el valor de una clave dada su
+posición en el vector.
+\end{problem}
+
+Vamos a considerar el caso en el que estemos trabajando sobre un montículo de mínimos,
+siendo el caso de un montículo de máximos totalmente análogo. Se nos pide entonces
+incluir las operaciones de decrecer y aumentar clave (dada una posición en el vector)
+y que estas sean de coste logarítmico. Nosotros vamos a englobar en nuestra solución
+ambas operaciones en una única que sea \textit{cambiarClave}, que reciba una posición
+y una nueva clave y modifique este elemento del montículo cambiando su clave al nuevo
+valor recibido como parámetro. Es claro que la solución inocente de únicamente cambiar
+el valor no es válida pues puede suceder (y es de hecho el caso más común) que al 
+cambiar la clave estemos rompiendo la estructura de montículo de mínimos. Esto es, la
+equivalencia entre vector - montículo de mínimos puede romperse. 
+
+La solución pasa entonces por \textit{flotar} o \textit{hundir} el elemento al que
+cambiamos la clave según corresponda (tomando las operaciones flotar e hundir vistas
+en clase, cuyo coste sabemos logarítmico). El código correspondiente sería:
+
+\begin{listing}
+ template<typename T>
+ void cambiarClave(int position, T newKey)
+ {
+    array[position] = newKey;
+    
+    flotar(position);
+    hundir(position);
+ }
+\end{listing}
+ 
+ \setlength{\parskip}{0mm} 
+ Observaciones:
+ 
+\begin{enumerate}
+    \item Se ha partido de la clase \textit{PriorityQueue} a disposición como código
+          de la asignatura.
+    \item Se llama tanto a flotar como a hundir independiente de si se aumenta o 
+          disminuye la clave sabiendo que, una de las llamadas terminará de forma
+          inmediata sin modificar el vector.
+\end{enumerate}
+ 
+
+
+\end{document}

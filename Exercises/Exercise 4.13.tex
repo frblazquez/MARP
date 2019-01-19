@@ -1,0 +1,180 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+ 
+\newenvironment{problem}[2][Problema]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\usepackage[utf8]{inputenc}                 % Using Unicode encoding
+\usepackage[spanish]{babel}                 % Writing in Spanish language
+%\usepackage{listings}                       % For including C++ code
+\setlength{\parindent}{0mm}                 % Paragraph indentation null
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+%--------------------------------------------------------------------------
+%   PARA INCLUIR CÓDIGO C++ EN EL DOCUMENTO
+%--------------------------------------------------------------------------
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+\usepackage{listings}
+\lstset{ frame=Ltb,
+framerule=0pt,
+aboveskip=0.5cm,
+framextopmargin=3pt,
+framexbottommargin=3pt,
+framexleftmargin=0.4cm,
+framesep=0pt,
+rulesep=.4pt,
+backgroundcolor=\color{gray97},
+rulesepcolor=\color{black},
+%
+stringstyle=\ttfamily,
+showstringspaces = false,
+basicstyle=\small\ttfamily,
+commentstyle=\color{gray45},
+keywordstyle=\bfseries,
+%
+numbers=left,
+numbersep=15pt,
+numberstyle=\tiny,
+numberfirstline = false,
+breaklines=true,
+}
+
+% minimizar fragmentado de listados
+\lstnewenvironment{listing}[1][]
+{\lstset{#1}\pagebreak[0]}{\pagebreak[0]}
+
+\lstdefinestyle{consola}
+{basicstyle=\scriptsize\bf\ttfamily,
+backgroundcolor=\color{gray75},
+}
+
+\lstdefinestyle{C}
+{language=C,
+}
+
+\begin{document}
+ 
+\title{\textbf{Hoja 4 - Ejercicio 13}}
+\author{Francisco Javier Blázquez Martínez}
+\date{}
+\maketitle
+ 
+\begin{problem}{4.13.1}
+Dado un grafo G representado de forma abstracta por medio de una funciónn que a cada
+vértice del grafo le asocia una lista de vértices adyacentes, escribir un algoritmo
+que calcule el número de componentes conexas de G y cuántas de ellas no tienen ciclos.
+\end{problem}
+
+\setlength{\parskip}{0mm}
+Observaciones preliminares:
+
+\begin{itemize}
+    \item Ya conocemos algoritmos para calcular el número de componentes conexas de 
+          un grafo (basados en DFS o BFS, ver apuntes de la asignatura).
+    \item Al ser un grafo no dirigido, no vamos a considerar ciclos de una única 
+          arista. De lo contrario toda componente conexa tiene ciclos si y sólo si 
+          tiene más de un vértice.
+\end{itemize}
+
+La duda entonces es si podemos modificar ligeramente los algorimtos de recorrido BFS
+o DFS para conseguir lo que nos piden, calcular el número de componentes conexas y al
+mismo tiempo saber cuáles de estas contienten ciclos. La respuesta es que en efecto
+es posible. En nuestro recorrido, guardaremos para cada vértice nuevo de nuestra 
+componente conexa el vértice que nos permitió llegar hasta él. Si en algún momento del
+recorrido podemos llegar a él por otro vértice distinto, el hecho de estar los tres
+en la misma componente conexa nos permite asegurar que forman un ciclo. El código 
+sería entonces:
+
+\setlength{\parskip}{\baselineskip}
+
+\begin{listing}
+//Aplicable a la clase Grafo.h (ver implementaciones dadas) 
+
+ void componentesConexasCiclos(int &conexas, int &ciclos)
+ {
+    conexas = 0;
+    ciclos = 0;
+    bool tieneCiclos;
+    
+    int padres[_V]; 
+    for(int i = 0; i < _V; i++) padres[i] = -1;
+    
+    for(int i = 0; i < _V; i++)
+    {
+        if(padres[i] == -1)
+        {
+        std::vector<int> siguientes;
+        conexas++;
+        tieneCiclos = false;
+        padres[i] = i;
+        siguientes.push_back(i);
+        
+        while(!siguientes.empty())
+        {
+            int v = siguientes.back();
+            int adyacente;
+            siguientes.pop_back();
+                    
+            for(int j = 0; j < _ady[v].size(); j++)
+            {
+                adyacente = _ady[v][j];
+                
+                if(padres[adyacente] == -1)
+                {
+                    padres[adyacente] = v;
+                    siguientes.push_back(adyacente);
+                }
+                else if(padres[v] != adyacente)
+                {
+                    if(!tieneCiclos)
+                    {
+                        tieneCiclos = true;
+                        ciclos++;
+                    }
+                }
+            }
+        } // end while
+        } // end if
+    }       
+ }
+\end{listing}
+
+Vemos aquí que el array de enteros \textit{padres} nos sirve tanto para marcar los
+vértices que ya hemos visitado como para marcar el vértice que nos permitió alcanzar
+este vértice en la componente conexa y prevenir ciclos. Esto es, padres[i] = v implica
+que llegamos al vértice i gracias a que está conectado con el vértice v. El vértice
+de inicio del recorrido en una componente conexa se marca como su propio padre para
+que el algoritmo sepa que ya se ha incluido en la componente conexa a explorar, esto
+no quiere decir que permitamos autoaristas en el grafo, es un detalle de 
+implementación fijado de forma arbitraria. El hecho de inicializar el array de padres
+al valor -1 es también arbitrario, siendo válido cualquier valor que no se encuentre
+en el rango [0, \_V).
+
+
+\begin{problem}{4.13.2}
+Indicar como encontrar de manera eficiente un subconjunto de arcos mínimo que mantenga
+la relación de alcanzabilidad original.
+\end{problem}
+
+Si nos fijamos, al guardar para cada vértice que añadimos a la componente conexa el
+vértice desde el que llegamos a este, estamos de hecho guardando la arista que une
+el vértice que acabamos de añadir a la componente conexa con el vértice que nos 
+permite llegar a este. El array \textit{padres} no nos vale únicamente para prevenir
+ciclos sino que nos da al mismo tiempo un árbol de recubrimiento mínimo. Nos vale
+por tanto la solución del apartado anterior y basta con interpretar el array
+\textit{padres}.El subconjunto de arcos pedido es por tanto:
+
+\setlength{\parskip}{0mm}
+
+
+    \[S = \{(i,padres[i]) / padres[i] != i\}\]
+
+\end{document}
