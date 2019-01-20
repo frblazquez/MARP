@@ -25,7 +25,7 @@ int main()
     {
       cin >> ini >> fin;
 
-      trabajos.push_back({ini, fin});
+      if(ini<finInter && fin>iniInter) trabajos.push_back({ini, fin});
     }
 
     sort(trabajos.begin(), trabajos.end());
