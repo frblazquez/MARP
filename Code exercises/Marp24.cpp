@@ -3,8 +3,17 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Keep the median of a set of numbers in spite of insertions.
+*/
+
+/*
+*   This problem is implemented following a priority queue implementation
+*   not in C++ STL.
+*
+*   Available at: https://github.com/frblazquez/MARP/tree/master/Implementations
 */
 
 #include <iostream>
@@ -17,11 +26,11 @@ int main()
 
   while(numValues)
   {
-    PriorityQueue<int> underMedian;
-    PriorityQueue<int> overMedian;
+    PriorityQueue<int> underMedian;     // Two heaps, they transfer data each other
+    PriorityQueue<int> overMedian;      // to keep the size invariant
 
     int aux; cin >> aux;
-    underMedian.push(-aux);
+    underMedian.push(-aux);             // -1*aux to have reverse ordenation (max heap)
 
     cout << 2*aux; if(numValues != 1) cout << " ";
 

@@ -1,0 +1,46 @@
+/*
+*   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
+*
+*   Double degree in Mathematics - Computer Engineering
+*   Complutense University, Madrid
+*
+*   Description: Index for the exercises solved.
+*/
+
+-> TREES:
+    + Problem 10: Is a tree balanced?
+      The recursive method implemented follows directly the recursive definition
+      of balanced tree.
+    + Problem 11: Is an AVL tree?
+      Recursive method derived from the recursive definition of the AVL condition.
+    + Problem 12: Keys in a range given.
+      This problem is much more didactic if it's done modifying a BST data struc-
+      ture. It's easily done with a variation of search algorithm.
+    + Problem 13: Kth element in a BST.
+      This problem is designed for adding a new attribute in each node of a BST
+      data structure to keep the number of descending nodes. Then a variation of
+      the BST search allows us to find the solution.
+      
+-> HEAPS:
+    + Problem 20: Minimise adding cost.
+      This problem combines heaps and a greedy algorithm to find the solution.
+      We just add always the minimal numbers.
+    + Problem 21: Simulation of data sending.
+      We use in this problem a heap to execute the simulation with a low complexity.
+    + Problem 22: Simulation of a hospital consultation.
+      We execute the simulation the number of steps required keeping the concor-
+      dance adding or removing elements from the heap.
+    + Problem 23: Are some tasks overlaped?
+      We again use a greedy algorithm and a heap to have data ordenation with low
+      algorithm complexity.
+    + Problem 24: Keep the median of a set of numbers during insertions.
+      For this problem we use two heaps, a max-heap and min-heap to maintain an
+      invariant of equal size for having the median at the top of min-heap.
+      
+-> GRAPHS:
+    
+
+
+
+
+

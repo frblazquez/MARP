@@ -3,8 +3,11 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Design a method to check wether a tree is 
+*              balanced or not.
 */
 
 #include <iostream>

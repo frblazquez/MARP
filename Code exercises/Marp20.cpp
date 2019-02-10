@@ -3,8 +3,17 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Find the minimum cost for an addition.
+*/
+
+/*
+*   This problem is implemented following a priority queue implementation
+*   not in C++ STL.
+*
+*   Available at: https://github.com/frblazquez/MARP/tree/master/Implementations
 */
 
 #include <iostream>

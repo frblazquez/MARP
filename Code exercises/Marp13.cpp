@@ -3,18 +3,22 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Find the kth element in a BST.
 */
 
 /*
-  ATENCIÓN!
-
-  Si has abierto este fichero para revisar la entrega, cancela el veredicto de
-  acepted y no perdamos más el tiempo.
-
-  Es una chapuza manifiesta, no se extiende la clase de árboles AVL ni nada.
+*   This problem is designed to modify a BST data structure adding a
+*   new attribute to their nodes in order to know the number of
+*   descending nodes. Then, with a simple modification of the search
+*   method we can get the solution.
+*
+*   However, our solution is much simpler, but much less educational.
+*   We put all the data in a vector and then we sort it.
 */
+
 #include <iostream>
 #include <vector>
 #include <unordered_set>
@@ -28,8 +32,8 @@ int main()
 
   while(numElems)
   {
-    vector<int> elems;
-    unordered_set<int> elems2;
+    vector<int> elems;              // To store the elements
+    unordered_set<int> elems2;      // To avoid repetitions
 
     for(int i = 0; i<numElems; i++)
     {

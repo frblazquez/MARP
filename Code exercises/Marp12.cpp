@@ -3,18 +3,22 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Implement a method to determinate the keys
+*              in a binary search tree in a range given.
 */
 
 /*
-  ATENCIÓN!
-
-  Si has abierto este fichero para revisar la entrega, cancela el veredicto de
-  acepted y no perdamos más el tiempo.
-
-  Es una chapuza manifiesta, no se extiende la clase de árboles AVL ni nada.
+*   This exercise should be done inside a binary search tree
+*   data structure implementing a variation of the search method. 
+*  
+*   The way it's done is putting all the keys in a vector, ordering
+*   it and then using a lineal search for finding the keys in the 
+*   range given. The algorithm complexity is the same.
 */
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -36,7 +40,7 @@ int main()
 
     cin >> lowBound >> upBound;
 
-    //Eficiencia pésima recorrerlo así (chapuza)
+    //We don't even do a binary search
     for(int k = 0; k<numElems; k++)
     {
       if(elems[k]>=lowBound && elems[k] <= upBound)
