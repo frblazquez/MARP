@@ -3,8 +3,15 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Size of the maximum connected component of a graph.
+*/
+
+/*
+*   This problem is implemented following a graph implementation available at: 
+*   https://github.com/frblazquez/MARP/tree/master/Implementations
 */
 
 #include <iostream>
@@ -26,7 +33,7 @@ int main()
     for(int i = 0; i < numEdges; i++)
     {
       cin >> init >> end;
-      friends.ponArista(init-1, end-1);
+      friends.ponArista(init-1, end-1);     // We add the edge
     }
 
     cout << friends.numElemsMayorCompConexa() << endl;
@@ -35,11 +42,11 @@ int main()
   return 0;
 }
 
-//----------------------------------------------------------------------------//
-//--------------------------- MÉTODOS AÑADIDOS -------------------------------//
-//----------------------------------------------------------------------------//
-// Francisco Javier Blázquez Martínez ----------------------- frblazqu@ucm.es //
+
 /*
+*   This method should be added to Graph class.
+*
+
 int numElemsMayorCompConexa() const
 {
   if(_V == 0)  return 0;

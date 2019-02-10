@@ -3,8 +3,15 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Minimum cost for connecting all the islands.
+*/
+
+/*
+*   This problem is implemented following a graph implementation available at: 
+*   https://github.com/frblazquez/MARP/tree/master/Implementations
 */
 
 #include <iostream>

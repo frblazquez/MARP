@@ -38,8 +38,38 @@
       invariant of equal size for having the median at the top of min-heap.
       
 -> GRAPHS:
-    
-
+    + Problem 30: Transitive closure, maximum size of a conected component.
+      This problem can easily be solved with a few modifications in BFS or DFS
+      algorithms.
+    + Problem 31: Determinate wether a graph is bipartite or not.
+      This problem requires a DFS (or BFS) algorithm with a modification on the
+      mark system.
+    + Problem 32: Snakes and stairs.
+      We explore all possibles cells we can reach in an increasing number of 
+      movements until we reach last cell.
+    + Problem 33: White - Black sheeps.
+      Connected components problem. Can be implemented with a boolean matrix 
+      because there are just two elements presents.
+    + Problem 34: Oil tanker problem.
+      Connected components problem during insertions. Uses Union-find schema with
+      path compression and size control for the solution.
+    + Problem 35: Squirrel problem.
+      For solving this problem we put the trees in reverse order they were cut
+      until we connect both ends. We use Union-find schema. Distance used in this
+      problem is euclidean distance!
+    + Problem 36: Going from a point to other using only big-enough edges.
+      This problem is implemented with a variation of DFS algorithm. However is
+      much more efficient to use Dijsktra algorithm.
+    + Problem 37: Connecting all the islands.
+      Minimum spanning tree problem. This can be solved with Dijsktra algorithm
+      but it's even better Kruskal or Prim algorithms.
+    + Problem 38: Minimum distance from a node to all the others.
+      Again, Dijsktra algorithm is omnipresent. It's the simplest and most effec-
+      tive way for knowing distance from a vertex to all others.
+    + Problem 39: Minimum cost for a messenger to do it's journey.
+      Two Dijsktra algorithm execution. We keep the graph and the reverse graph.
+      Dijkstra 1 let us know minimum cost of going from start to every node and
+      Dijkstra 2 let us know minimum cost of going back from every node to start.
 
 
 

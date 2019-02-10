@@ -3,8 +3,11 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Maximum size of a connected component in a
+*              dinamic insertion situation.
 */
 
 #include <iostream>
@@ -15,10 +18,10 @@ int photo[1000000]; //Global variable BAD PRACTISE!!
 
 int theFather(int pos)
 {
-  //Si es un padre devuelve directamente su posición
+  //It's its own father
   if(photo[pos]==pos) return pos;
 
-  //Si no es un padre, haya su padre y actualiza su puntero
+  //Find it's father and update it
   photo[pos] = theFather(photo[pos]);
 
   return photo[pos];
@@ -31,16 +34,16 @@ void comp_union(int row, int col, int numRows, int numCols, unordered_map<int, i
   for(int i = -1; i<=1; i++)
   for(int j = -1; j<=1; j++)
   {
-    //Siempre que estemos en el rango buscamos manchas
+    //Never out of range!
     if((i!=0 || j!=0) && 0<=(row+i) && (row+i)<numRows && 0<=(col+j) && (col+j)<numCols)
     {
-      //Si en efecto es una mancha
+      //If it's a spot
       if(photo[(row+i)*numCols + (col+j)] != -1)
       {
         father1 = theFather((row+i)*numCols + (col+j));
         father2 = theFather(row*numCols + col);
 
-        //Si la colindante y la actual no están ya en la misma mancha
+        //If the new spot joins non connected components
         if(father1 != father2)
         {
           comp1Size = sizesMap[father1];
@@ -69,13 +72,13 @@ void union_inicio(int row, int col, int numRows, int numCols, unordered_map<int,
     //Siempre que estemos en el rango buscamos manchas
     if(0<=(row+i) && (row+i)<numRows && 0<=(col+j) && (col+j)<numCols)
     {
-      //Si en efecto es una mancha
+      //If it's a spot
       if(photo[(row+i)*numCols + (col+j)] != -1)
       {
         father1 = theFather((row+i)*numCols + (col+j));
         father2 = theFather(row*numCols + col);
 
-        //Si la colindante y la actual no están ya en la misma mancha
+        //If spot by and spot are not connected yet
         if(father1 != father2)
         {
           comp1Size = sizesMap[father1];
@@ -102,10 +105,10 @@ int main()
   while(cin)
   {
     cin.get(c);                                   //Reads the last end line
-    maxUnidos = 0;                                //Tamaño de la mancha más grande
-    unordered_map<int, int> father_componentSize; //Padre de la componente conexa y tamaño de esta
+    maxUnidos = 0;                                //Maximal connected component
+    unordered_map<int, int> father_componentSize; //Component father and size
 
-    //------------------------- LECTURA DE DATOS -----------------------------//
+    //------------------------- DATA LECTURE ---------------------------------//
     for(int i=0; i<numRows; i++){
     for(int j=0; j<numCols; j++)
     {
@@ -124,7 +127,7 @@ int main()
     cout << maxUnidos;
     cin >> numPhotos;
 
-    //-------------------------- NUEVAS MANCHAS ------------------------------//
+    //-------------------------- NEW SPOTS -----------------------------------//
     for(int k=0; k<numPhotos; k++)
     {
       cin >> row >> col; row--; col--;

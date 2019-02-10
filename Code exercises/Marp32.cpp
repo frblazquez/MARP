@@ -3,8 +3,11 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Minimum number of moves in Stairs-Snakes game to 
+*              win with a determinated board state.
 */
 
 #include <iostream>
@@ -21,46 +24,55 @@ int main()
 
   while(boardSize != 0)
   {
-    numCells = boardSize*boardSize;                         //Número total de celdas
-    for(int i = 0; i < numCells; i++) board[i] = numCells;  //Inicialización del tablero
-    unordered_map<int, int> snakes,stairs;                  //Declaración de serpientes y escaleras
+    numCells = boardSize*boardSize;                         //Total number of cells
+    for(int i = 0; i < numCells; i++) board[i] = numCells;  //Board initialization
+    unordered_map<int, int> snakes,stairs;                  //We keep a map instead a graph 
+                                                            //for snakes and stairs
+                                                            
+    /*
+      Each cell of board[] is an integer that represents the minimum number
+      of moves needed for reachin that cell from the initial position.
+        
+      We are going to simulate a game, exploring all posible states following
+      number of moves order.
+    */
 
-    //Leemos las serpientes
+    //Reads the snakes
     for(int i = 0; i < numSnakes; i++)
     {cin >> init >> end; snakes[init-1] = end-1;}
 
-    //Leemos las escaleras
+    //Reads the stairs
     for(int i = 0; i < numStairs; i++)
     {cin >> init >> end; stairs[init-1] = end-1;}
 
     // --------------------------------------------------------------------- //
     vector<int> nexts, actual; actual.push_back(0); board[0] = 0;
     int numMoves = 0, position, maxTriviales;
-    bool terminado = false;
+    bool ended = false;
 
-    while(!terminado)
+    while(!ended)
     {
       numMoves++;
 
-      while(!terminado && !actual.empty())
+      while(!ended && !actual.empty())
       {
       position = actual.back(); actual.pop_back();
       maxTriviales = -1;
 
-      for(int j = 1; j <= maxSteps && !terminado; j++)
+      for(int j = 1; j <= maxSteps && !ended; j++)
       {
-        if(position+j == numCells-1)           // Si es la celda final
-          terminado = true;
-        else if(board[position+j] > numMoves)  // Si es una celda no pasada ya
+        if(position+j == numCells-1)           // We reach the last cell
+          ended = true;
+        else if(board[position+j] > numMoves)  // Non reached yet cell
         {
           board[position+j] = numMoves;
 
-        if(snakes.count(position+j) != 0)     // Si es comienzo de una serpiente
+        if(snakes.count(position+j) != 0)      // Snake case!
         {
           board[snakes[position+j]] = numMoves;
           nexts.push_back(snakes[position+j]);
         }
-        else if(stairs.count(position+j) != 0)// Si es comienzo de una escalera
+        else if(stairs.count(position+j) != 0) // Stair case!
         {
           board[stairs[position+j]] = numMoves;
           nexts.push_back(stairs[position+j]);
@@ -73,7 +85,7 @@ int main()
       if(maxTriviales != -1) nexts.push_back(maxTriviales);
     }
 
-    if(!terminado) {actual = nexts; nexts.clear();}
+    if(!ended) {actual = nexts; nexts.clear();}
     }
 
     cout << numMoves << endl;
@@ -124,7 +136,7 @@ int main()
     int initPosition = 1, numMoves = 0;
 
     // This approach won't work, going as further as possible in a single
-    // move may be a wrong strategy.
+    // move is a wrong strategy !! 
 
     cout << numMoves;
     cin >> boardSize >> maxSteps >> numSnakes >> numStairs;

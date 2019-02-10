@@ -3,8 +3,10 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Find the element that let us connect both ends.
 */
 
 //Si da timelimit es porque tienes el esquema de union-find con path-compression
@@ -18,10 +20,10 @@ using namespace std;
 
 int father(vector<int> &componentes, int pos)
 {
-  //Si el elemento es un padre lo devolvemos
+  //Element is a father
   if(componentes[pos] == pos) return pos;
 
-  //Si no hallamos su padre y actualizamos su "puntero"
+  //Element has a father
   componentes[pos] = father(componentes, componentes[pos]);
 
   return componentes[pos];
@@ -45,8 +47,8 @@ int main()
     //--------------------------------------------------//
     // Union find schema:
     // We'll be placing trees in their position where they
-    // were cut (int the order they were cut) until we can
-    // connect the last and the first position.
+    // were cut (int the reverse-order they were cut) until 
+    // we can connect the last and the first position.
     //--------------------------------------------------//
 
     int last = alto*ancho -1, i = cortados.size(), pos, rowPos, colPos;

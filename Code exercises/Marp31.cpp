@@ -3,8 +3,15 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Determinate wether a graph is bipartite or not.
+*/
+
+/*
+*   This problem is implemented following a graph implementation available at: 
+*   https://github.com/frblazquez/MARP/tree/master/Implementations
 */
 
 #include <iostream>
@@ -38,11 +45,10 @@ int main()
   return 0;
 }
 
-//----------------------------------------------------------------------------//
-//--------------------------- MÉTODOS AÑADIDOS -------------------------------//
-//----------------------------------------------------------------------------//
-// Francisco Javier Blázquez Martínez ----------------------- frblazqu@ucm.es //
 /*
+*   This method should be added at Graph class.
+*
+
 bool esBipartito() const
 {
   if(_V <= 1)  return true;

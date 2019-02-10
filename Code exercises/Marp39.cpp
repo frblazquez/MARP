@@ -3,10 +3,14 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Minimum time from homepage to all other pages.
 */
 
+//------------------------------------------------------------------------------
+//------------------------ TAD IMPLEMENTATION ----------------------------------
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -169,13 +173,25 @@ private:
    priority_queue<pair<int,int>> toExplore;
 };
 
+//------------------------------------------------------------------------------
+//------------------------ ALGORITHM EXECUTION ---------------------------------
+
 /*
 *   Copyright © 2018
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Minimum time from homepage to all other pages.
+*/
+
+/*
+*   The general idea is that we are keeping the graph and the
+*   reverse graph. With two executions of Dijsktra algorithm
+*   we can know wether it's possible or not to go and come back
+*   to a point and the minimum cost of this.
 */
 
 #include <iostream>
