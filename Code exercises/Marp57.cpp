@@ -3,8 +3,10 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Assign works minimising overlap in a critical interval.
 */
 
 #include <iostream>
@@ -38,7 +40,7 @@ int main()
       workIni = trabajos[i].first;
       workEnd = trabajos[i].second;
 
-      if(workIni>partialEnd)  // Hay un segmento de tiempo que no podrá ser asignado
+      if(workIni>partialEnd)  // It's not possible to cover all the interval
         imposible = true;
       else if(workIni<=partialIni)
       {

@@ -3,8 +3,10 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Maximice the number of films we can watch.
 */
 
 #include <iostream>
@@ -32,6 +34,7 @@ int main()
 
     while(nextFilm < numFilms)
     {
+      // It took us 10 minutes to move from a room to another
       if(films[nextFilm].second >= quedaLibre+10)
       {
         numPosibles++;

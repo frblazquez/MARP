@@ -3,8 +3,10 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Calculate the maximum number of overlaps of the given intervals.
 */
 
 #include <iostream>
@@ -24,6 +26,8 @@ int main()
     {cin >> aux; inicios.push_back(aux);
      cin >> aux; finales.push_back(aux);}
 
+    // If equal end time, we took first the lower initial time interval.
+    // This is why we order twice
     sort(inicios.begin(), inicios.end());
     sort(finales.begin(), finales.end());
 

@@ -3,8 +3,10 @@
 *
 *   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
 *
-*   Doble grado Ingeniería informática - Matemáticas
-*   Universidad Complutense de Madrid
+*   Double degree in Mathematics - Computer engineering
+*   Complutense University, Madrid
+*
+*   Statement: Minimize the number of connections needed.
 */
 
 #include <iostream>
@@ -30,6 +32,7 @@ int main()
 
     while(i<edificios.size())
     {
+      // If the next building is out our interval, tunel necessary, new interval.
       if(edificios[i].first >= fin)
       {
         numTunels++;
@@ -37,6 +40,8 @@ int main()
         ini = edificios[i].first;
         fin = edificios[i].second;
       }
+      // If the intersection of the new building and our interval is not empty,
+      // we restrict our interval to the intersection.
       else
       {
         ini = max(ini, edificios[i].first);
