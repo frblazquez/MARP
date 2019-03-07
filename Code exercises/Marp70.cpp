@@ -8,6 +8,221 @@
 *
 */
 
+struct Song
+{
+  int duration;
+  int points;
+
+  bool operator<(Song const& s2) const
+  {
+    double p1 = points, p2 = s2.points;
+
+    return p1/duration > p2/s2.duration;
+  }
+};
+
+struct Solution
+{
+  int optimist;
+  int pesimist;
+  int level;
+
+  int free1;
+  int free2;
+  int points;
+
+  bool operator<(Solution const& s2) const
+  {
+    return optimist < s2.optimist || (optimist == s2.optimist && points < s2.points);
+  }
+};
+
+#include <iostream>
+#include <algorithm>
+#include <queue>
+using namespace std;
+
+const int MAX_SONGS = 25;
+
+int  numSongs;
+int  freeSpace;
+int  bestSol;
+Song songs[MAX_SONGS];
+//int  maxPtsLevel[MAX_SONGS];
+
+void estimate(int level, int space1, int space2, int &opt, int &pes);
+void BandB(priority_queue<Solution> &queue);
+
+int main()
+{
+  /* QUEUE TEST
+  Solution s1,s2,s3,s4;
+
+  s1.optimist = 3;  s1.points = 5;
+  s2.optimist = 3;  s2.points = 1;
+  s3.optimist = 2;  s3.points = 1;
+  s4.optimist = 1;  s4.points = 1;
+
+  priority_queue<Solution> queue;
+  queue.push(s1);
+  queue.push(s2);
+  queue.push(s3);
+  queue.push(s4);
+
+  for(int i = 0; i < 4; i++)
+    {cout << queue.top().optimist << " " << queue.top().points << endl; queue.pop();}
+  */
+
+  cin >> numSongs;
+
+  while(numSongs)
+  {
+    cin >> freeSpace;
+
+    for(int i = 0; i < numSongs; i++)
+      cin >> songs[i].duration >> songs[i].points;
+
+    sort(songs, songs + numSongs);
+
+  // TO PRINT THE SONGS ORDERED
+  //for(int i = 0; i < numSongs; i++)
+  //cout << songs[i].points << " " << songs[i].duration << endl;
+
+  //maxPtsLevel[numSongs-1] = songs[numSongs-1].points;
+
+  //for(int i = numSongs-2; i >= 0; i--)
+  //  maxPtsLevel[i] = maxPtsLevel[i+1] + songs[i].points;
+
+    priority_queue<Solution> cola;
+    Solution first;
+
+    first.free1  = freeSpace;
+    first.free2  = freeSpace;
+    first.points = 0;
+    first.level  = 0;
+
+    estimate(0, freeSpace, freeSpace, first.optimist, first.pesimist);
+    bestSol = first.pesimist;
+
+    cola.push(first);
+
+    BandB(cola);
+
+    cout << bestSol << endl;
+    cin >> numSongs;
+  }
+
+  return 0;
+}
+
+void estimate(int level, int space1, int space2, int &opt, int &pes)
+{
+  opt = 0;
+
+  while(level < numSongs && (space1 >= songs[level].duration || space2 >= songs[level].duration))
+  {
+    opt += songs[level].points;
+
+    if(space1 >= songs[level].duration) // Va a la cinta 1
+       space1 -= songs[level].duration;
+    else                                // Va a la cinta 2
+       space2 -= songs[level].duration;
+
+    level++;
+  }
+
+  pes = opt;
+  int space = space1 + space2;
+
+  while(level < numSongs && space != 0)
+  {
+    // Mantemenos la cota pesimista actualizada
+    if(space1 >= songs[level].duration)
+      {pes += songs[level].points; space1 -= songs[level].duration;}
+    else if(space2 >= songs[level].duration)
+      {pes += songs[level].points; space2 -= songs[level].duration;}
+
+    // Actualizamos la cota optimista
+    if(space < songs[level].duration)
+      {opt += (space*songs[level].points)/songs[level].duration; space = 0;}
+    else
+      {opt += songs[level].points; space -= songs[level].duration;}
+
+    level++;
+  }
+
+  while(level < numSongs)
+  {
+    // Mejoramos la cota pesimista si podemos
+    if(space1 >= songs[level].duration)
+      {pes += songs[level].points; space1 -= songs[level].duration;}
+    else if(space2 >= songs[level].duration)
+      {pes += songs[level].points; space2 -= songs[level].duration;}
+
+    level++;
+  }
+
+  //cout << opt << " " << pes << endl;
+}
+void BandB(priority_queue<Solution> &queue)
+{
+  Solution act, next;
+
+  while(!queue.empty() && queue.top().optimist > bestSol)
+  {
+    act  = queue.top(); queue.pop();
+    next = act; next.level++;
+
+    if(act.free1 >= songs[act.level].duration)
+    {
+      next.points += songs[act.level].points;
+      next.free1  -= songs[act.level].duration;
+    //next.free2   = act.free2;
+
+      if(next.level == numSongs)  bestSol = max(next.points, bestSol);
+      else                        queue.push(next);
+    }
+
+    if(act.free2 >= songs[act.level].duration)
+    {
+      next.points = act.points + songs[act.level].points;
+      next.free1  = act.free1;
+      next.free2  = act.free2  - songs[act.level].duration;
+
+      if(next.level == numSongs)
+        bestSol = max(next.points, bestSol);
+      else if(act.free1 < songs[act.level].duration) // No cabe en la cinta 1
+        queue.push(next);
+      else                                      // Si cabe pero lo metemos en la 2
+      {
+        estimate(next.level, next.free1, next.free2, next.optimist, next.pesimist);
+
+        next.pesimist += next.points;
+        next.optimist += next.points;
+
+        if(next.pesimist > bestSol) bestSol = next.pesimist;
+        if(next.optimist > bestSol) queue.push(next);
+      }
+    }
+
+    if(next.level != numSongs)
+    {
+      next.points = act.points;
+      next.free1  = act.free1;
+      next.free2  = act.free2;
+
+      estimate(next.level, next.free1, next.free2, next.optimist, next.pesimist);
+
+      next.pesimist += next.points;
+      next.optimist += next.points;
+
+      if(next.pesimist > bestSol) bestSol = next.pesimist;
+      if(next.optimist > bestSol) queue.push(next);
+    }
+  }
+}
+
+/* BRANCH AND BOUND SOLUTION - TIMELIMIT EXCEEDED
 #include <iostream>
 #include <algorithm>
 #include "Data structures/PriorityQueue.h"
@@ -56,8 +271,9 @@ struct solution
 
   bool operator<(solution const& sol2) const
   {
-    if(optimist > sol2.optimist)        return true;
-    else if(optimist == sol2.optimist)  return points > sol2.points;
+    if(pesimist > sol2.pesimist)        return true;
+    else if(pesimist == sol2.pesimist)  return optimist > sol2.optimist;
+    else if(optimist == sol2.optimist)  return points   > sol2.points;
     else                                return false;
   }
 };
@@ -131,7 +347,12 @@ int optimist(int level, int free1, int free2)
     if(freeSpace >= songs[level].duration)
       {points += songs[level].points; freeSpace -= songs[level].duration;}
     else
-      {points += (songs[level].points*freeSpace)/songs[level].duration; freeSpace = 0;}
+    {
+      while(level+1 < numSongs && freeSpace < songs[level+1].duration) level++;
+
+      points += (songs[level].points*freeSpace)/songs[level].duration;
+      freeSpace = 0;
+    }
   }
 
   return points;
@@ -159,8 +380,11 @@ void explore(PriorityQueue<solution> & queue)
 {
   solution act; song levelSong; int opt,pes;
 
-  while(!queue.empty() && queue.top().optimist > bestSolution)
+  while(!queue.empty())
   {
+    if(queue.top().optimist < bestSolution)
+      queue.pop();
+    else{
     act  = queue.top(); queue.pop();
     levelSong = songs[act.level];
 
@@ -172,6 +396,15 @@ void explore(PriorityQueue<solution> & queue)
     }
     else if(act.free1 >= minDurations[act.level] || act.free2 >= minDurations[act.level])
     {
+      if(act.free1 == act.free2 && act.free1 >= levelSong.duration)
+        queue.push({act.pesimist,
+                    act.optimist,
+                    act.points + levelSong.points,
+                    act.level+1,
+                    act.free1 - levelSong.duration,
+                    act.free2});
+
+      else {
       if(act.free1 >= levelSong.duration)
         queue.push({act.pesimist,
                     act.optimist,
@@ -196,7 +429,7 @@ void explore(PriorityQueue<solution> & queue)
                     act.level+1,
                     act.free1,
                     act.free2 - levelSong.duration});
-      }
+      }}
 
       opt = act.points + optimist(act.level+1, act.free1, act.free2);
 
@@ -215,8 +448,8 @@ void explore(PriorityQueue<solution> & queue)
                     act.free2});
       }
     }
-  }
-}
+  }}
+}*/
 
 /*
 const int MAX_SONGS = 25;
@@ -238,7 +471,7 @@ struct tSolucion
   bool operator<(tSolucion const& t2) const
   {
     // PARA ORDENAR POR DENSIDAD DE PUNTUACIÓN
-    /*
+
     if(free1==space && free2==space)          return false; // No hemos grabado nada
     if(t2.free1==space && t2.free2==space)    return true;// El otro disco está vacío
 

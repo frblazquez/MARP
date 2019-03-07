@@ -6,7 +6,7 @@
 *   Double degree in Mathematics - Computer engineering
 *   Complutense University, Madrid
 *
-*   Statement: Design a method to check wether a tree is 
+*   Statement: Design a method to check wether a tree is
 *              balanced or not.
 */
 
