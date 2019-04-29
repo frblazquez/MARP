@@ -1,0 +1,168 @@
+%   Copyright © 2019
+%
+%   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
+%
+%   Double degree in Mathematics-Computer engineering.
+%   Complutense university, Madrid.
+
+%--------------------------------------------------------------------------
+% CABECERA DEL DOCUMENTO - IMPORTACIÓN DE PAQUETES
+%--------------------------------------------------------------------------
+\documentclass[letterpaper,12pt]{article}
+\usepackage{tabularx} % extra features for tabular environment
+\usepackage{amsmath}  % improve math presentation
+\usepackage{graphicx} % takes care of graphic including machinery
+\usepackage[margin=1in,letterpaper]{geometry} % decreases margins
+\usepackage{cite} % takes care of citations
+\usepackage[final]{hyperref} % adds hyper links inside the generated pdf file
+\hypersetup{
+	colorlinks=true,       % false: boxed links; true: colored links
+	linkcolor=blue,        % color of internal links
+	citecolor=blue,        % color of links to bibliography
+	filecolor=magenta,     % color of file links
+	urlcolor=black         
+}
+
+\usepackage[utf8]{inputenc}                 % Using Unicode encoding
+\usepackage[spanish]{babel}                 % Writing in Spanish language
+%\usepackage{listings}                       % For including C++ code
+\setlength{\parindent}{0mm}                 % Paragraph indentation null
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+%--------------------------------------------------------------------------
+%   PARA INCLUIR CÓDIGO C++ EN EL DOCUMENTO
+%--------------------------------------------------------------------------
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+\usepackage{listings}
+\lstset{ frame=Ltb,
+framerule=0pt,
+aboveskip=0.5cm,
+framextopmargin=3pt,
+framexbottommargin=3pt,
+framexleftmargin=0.4cm,
+framesep=0pt,
+rulesep=.4pt,
+backgroundcolor=\color{gray97},
+rulesepcolor=\color{black},
+%
+stringstyle=\ttfamily,
+showstringspaces = false,
+basicstyle=\small\ttfamily,
+commentstyle=\color{gray45},
+keywordstyle=\bfseries,
+%
+numbers=left,
+numbersep=15pt,
+numberstyle=\tiny,
+numberfirstline = false,
+breaklines=true,
+}
+
+% minimizar fragmentado de listados
+\lstnewenvironment{listing}[1][]
+{\lstset{#1}\pagebreak[0]}{\pagebreak[0]}
+
+\lstdefinestyle{consola}
+{basicstyle=\scriptsize\bf\ttfamily,
+backgroundcolor=\color{gray75},
+}
+
+\lstdefinestyle{C}
+{language=C,
+}
+
+%--------------------------------------------------------------------------
+% INICIO DEL DOCUMENTO - TÍTULO, AUTOR, FECHA ...
+%--------------------------------------------------------------------------
+\begin{document}
+
+\title{\bf{Breve introducción al desarrollo de motores de ajedrez}}
+\author{Francisco Javier Blázquez Martínez}
+\date{}
+\maketitle
+
+%--------------------------------------------------------------------------
+% RESUMEN INICIAL
+%--------------------------------------------------------------------------
+\begin{abstract}
+
+Trabajo realizado en el marco de la asignatura \textit{Métodos algorítmicos 
+en resolución de problemas}. Se introducen diversas técnicas para el desarrollo
+de motores de ajedrez centradas principalmente en los algoritmos de búsqueda
+y exploración en el árbol de posibles movimientos. He optado por omitir en su 
+mayor parte los detalles técnicos de representación del tablero, movimientos y 
+reglas del juego por mayor simplicidad.
+
+Se incluye también un apéndice con la aplicación práctica de parte de estas técnicas
+presentadas a un problema planteado en clase, el problema de la mochila múltiple.
+
+\end{abstract}
+
+%--------------------------------------------------------------------------
+%INICIO DEL CUERPO DEL DOCUMENTO
+%--------------------------------------------------------------------------
+\section{Introducción}
+Hola caracola, en esto he usado \cite{CPW}
+
+
+
+%\cite{melissinos, Cyr, Wiki}   % Para tener un ejemplo de cómo citar
+
+\section{Implementación}
+
+\section{Algoritmos}
+\subsection{Atributos de la clase}
+\subsection{Inserción}
+\subsection{Borrado}
+\subsection{Rotación de un nodo}
+\subsection{Splay}
+
+\appendix
+\section{Tests}
+Por mayor sencillez a la hora de comprobar el correcto funcionamiento de la 
+clase he incluido dos tests, uno manual y otro automático. Esta sección tiene
+el objetivo de explicar el funcionamiento de estos para que puedan ser 
+ejecutados por cualquier persona con interés en apreciar los múltiples cambios
+de estructura de los splay trees en una secuencia de operaciones. Se puede
+también fácilmente incluir mediciones del tiempo de ejecución en el test 
+automático para convencerse de que el coste amortizado de las operaciones es 
+logarítmico.
+
+
+\begin{lstlisting}
+#include "splay_tree.h"
+#include <cstdlib>
+#include <time.h>
+using namespace std;
+
+int main()
+{
+
+}
+\end{lstlisting}
+
+
+%++++++++++++++++++++++++++++++++++++++++
+% References section will be created automatically 
+% with inclusion of "thebibliography" environment
+% as it shown below. See text starting with line
+% \begin{thebibliography}{99}
+% Note: with this approach it is YOUR responsibility to put them in order
+% of appearance.
+
+\begin{thebibliography}{99}
+
+\bibitem{CPW}
+\textit{Chess Programming Wiki}. Versión del 15 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Main_Page}
+
+
+
+\end{thebibliography}
+
+
+\end{document}
