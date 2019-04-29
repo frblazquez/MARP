@@ -1,0 +1,668 @@
+%   Copyright © 2019
+%
+%   Francisco Javier Blázquez Martínez ~ frblazqu@ucm.es
+%
+%   Double degree in Mathematics-Computer engineering.
+%   Complutense university, Madrid.
+
+%--------------------------------------------------------------------------
+% CABECERA DEL DOCUMENTO - IMPORTACIÓN DE PAQUETES
+%--------------------------------------------------------------------------
+\documentclass[letterpaper,12pt]{article}
+\usepackage{tabularx} % extra features for tabular environment
+\usepackage{amsmath}  % improve math presentation
+\usepackage{graphicx} % takes care of graphic including machinery
+\usepackage[margin=1in,letterpaper]{geometry} % decreases margins
+\usepackage{cite} % takes care of citations
+\usepackage[final]{hyperref} % adds hyper links inside the generated pdf file
+\hypersetup{
+	colorlinks=true,       % false: boxed links; true: colored links
+	linkcolor=blue,        % color of internal links
+	citecolor=blue,        % color of links to bibliography
+	filecolor=magenta,     % color of file links
+	urlcolor=blue         
+}
+
+\usepackage[utf8]{inputenc}                 % Using Unicode encoding
+\usepackage[spanish]{babel}                 % Writing in Spanish language
+%\usepackage{listings}                       % For including C++ code
+\setlength{\parindent}{0mm}                 % Paragraph indentation null
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+%--------------------------------------------------------------------------
+%   PARA INCLUIR CÓDIGO C++ EN EL DOCUMENTO
+%--------------------------------------------------------------------------
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+\usepackage{listings}
+\lstset{ frame=Ltb,
+framerule=0pt,
+aboveskip=0.5cm,
+framextopmargin=3pt,
+framexbottommargin=3pt,
+framexleftmargin=0.4cm,
+framesep=0pt,
+rulesep=.4pt,
+backgroundcolor=\color{gray97},
+rulesepcolor=\color{black},
+%
+stringstyle=\ttfamily,
+showstringspaces = false,
+basicstyle=\small\ttfamily,
+commentstyle=\color{gray45},
+keywordstyle=\bfseries,
+%
+numbers=left,
+numbersep=15pt,
+numberstyle=\tiny,
+numberfirstline = false,
+breaklines=true,
+}
+
+% minimizar fragmentado de listados
+\lstnewenvironment{listing}[1][]
+{\lstset{#1}\pagebreak[0]}{\pagebreak[0]}
+
+\lstdefinestyle{consola}
+{basicstyle=\scriptsize\bf\ttfamily,
+backgroundcolor=\color{gray75},
+}
+
+\lstdefinestyle{C}
+{language=C,
+}
+
+%--------------------------------------------------------------------------
+% INICIO DEL DOCUMENTO - TÍTULO, AUTOR, FECHA ...
+%--------------------------------------------------------------------------
+\begin{document}
+
+\title{\bf{Implementación detallada de Splay Trees}}
+\author{Francisco Javier Blázquez Martínez}
+\date{}
+\maketitle
+
+%--------------------------------------------------------------------------
+% RESUMEN INICIAL
+%--------------------------------------------------------------------------
+\begin{abstract}
+
+Trabajo realizado en el marco de la asignatura \textit{Métodos algorítmicos 
+en resolución de problemas}. El objetivo de este documento es el de explicar
+las decisiones de diseño tomadas en el desarrollo del código y aclarar 
+distintos aspectos de las implementaciones en \textit{C++} y \textit{Java} 
+que puedan generar confusión.
+
+\end{abstract}
+
+%--------------------------------------------------------------------------
+%INICIO DEL CUERPO DEL DOCUMENTO
+%--------------------------------------------------------------------------
+\section{Introducción:}
+
+Los árboles binarios de búsqueda autoajustables (\textit{splay trees}) 
+aparecen en 1985 ideados por Robert Tarjan y Daniel Selator.
+Estos no son sino árboles binarios de búsqueda con una peculiaridad, una 
+operación interna sobre los nodos llamada ``\textit{splay}''. Esta operación, 
+invisible en todo momento al usuario, recibe un nodo como parámetro y 
+transforma el árbol de partida en un árbol binario de búsqueda equivalente 
+(manteniendo exactamente los elementos iniciales) en el cual la raíz es el 
+nodo seleccionado. Intuitivamente, esta operación se emplea para conseguir 
+que elementos recientemente requeridos se encuentren cerca de la raíz y, por 
+tanto, sea más rápido volver a acceder a ellos. De aquí proviene su apellido 
+``\textit{autoajustable}'' pues esta operación de splay consigue que el árbol 
+de preferencia en alturas menores a elementos más empleados en cualquier 
+secuencia de operaciones.
+
+El principal inconveniente de esta estructura de datos, sin embargo, es que, 
+a diferencia de los árboles AVL o los árboles Red-Black, no se mantiene 
+ningún invariante en la altura del árbol, pudiendo llegar a ser esta del 
+orden del número de elementos. Como ya sabemos, búsqueda, insercción y 
+borrado en un árbol binario son operaciones del orden de la altura del árbol.
+Esto quiere decir que el coste en el caso peor de estas operaciones en splay 
+trees es \textit{O(n)}. A pesar de esto, y precisamente el hecho de su 
+publicación por R. Tarjan y D. Selator, se puede demostrar que en cualquier 
+secuencia de inserciones, borrados y búsquedas de elementos estas operaciones
+tienen un coste amortizado logarítmico. De hecho, se puede aprovechar esta 
+propiedad de los splay trees de que elementos accedidos recientemente son 
+fácilmente accesibles para conseguir una mayor eficiencia bajo ciertas 
+circunstancias (no aleatorias). Aquí nos limitaremos a explicar los detalles 
+de la implementación presentada, para una mayor comprensión recomiendo 
+consultar la bibliografía al final del documento.
+
+%\cite{melissinos, Cyr, Wiki}   % Para tener un ejemplo de cómo citar
+
+\section{Implementación:}
+
+Como ya hemos mencionado, los splay trees son esencialmente árboles de
+búsqueda binarios y, como tales, tienen infinidad de aplicaciones. Es preciso
+antes de comenzar la implementación concretar las operaciones que vamos a 
+permitir ejecutar al usuario. En mi caso he optado por aplicar los splay 
+trees para crear una estrucura de datos de conjunto ordenado de elementos de
+tipo genérico, con un orden que puede ser especificado por el usuario.
+La interfaz pública de usuario se puede consultar en la tabla inferior.
+
+\begin{center}
+\begin{tabular}{|l|c|c|l|}
+
+	\hline
+	\textbf{Operación} & \textbf{Coste} & \textbf{Caso peor} & \textbf{Descripción}\\
+	\hline
+    splay\_tree()    & \textit{O(1)}     & \textit{O(1)} & Crea un conjunto vacío\\
+	\hline
+    \~splay\_tree()  & \textit{O(n)}     & \textit{O(n)} & Vacía el conjunto y libera la memoria\\ 
+	\hline
+	bool empty()     & \textit{O(1)}     & \textit{O(1)} & Devuelve true si el conjunto está vacío\\
+	\hline
+	bool insert(elem)& \textit{O(log(n))}& \textit{O(n)} & Devuelve true si inserta el elemento\\
+	\hline
+	bool erase(elem) & \textit{O(log(n))}& \textit{O(n)} & Devuelve true si elimina el elemento\\
+	\hline
+	bool find(elem)  & \textit{O(log(n))}& \textit{O(n)} & Devuelve true si \textit{elem} está en el conjunto\\
+	\hline
+	void print()     & \textit{O(n)}     & \textit{O(n)} & Muestra en preorder los elementos y su altura\\
+	\hline
+	
+\end{tabular}
+\end{center}
+
+El diseño se ha realizado así para asemejarse a la clase \textit{set} de la 
+librería estándar de \textit{C++}. De hecho, que detrás de esta interfaz se 
+encuentra la estructura de datos de splay tree es algo invisible al usuario. 
+Una diferencia a destacar con respecto la clase set de la \textit{C++ STL} es 
+que se incluye el método \textit{print()}. Esto es para poder visualizar en 
+consola la estructura completa del conjunto, cómo se almacenan y cómo varía la
+posición de los nodos al ejecutar las distintas operaciones, más allá del uso 
+como conjunto de la clase. Cabe destacar también de la implementación las 
+siguientes características:
+
+\begin{enumerate}
+\setlength{\parskip}{0mm}         % Distance among paragraphs
+
+\item No se permite la inserción repetida de un mismo elemento, esto es, 
+      nunca nuestro splay tree subyacente al conjunto implementado contendrá
+      dos nodos con elementos iguales. Para garantizar esto es necesario 
+      también que se de el punto número dos.
+\item El usuario puede decidir el orden que rige la estructura siempre que 
+      este constituya un orden total sobre el conjunto de posibles 
+      elementos. La estructura implementada está preparada para funcionar con 
+      un comparador cualquiera pero puede llegar a estados inconsistentes si 
+      esta condición no se satisface.
+\item A diferencia de otras implementaciones de splay trees, no se contempla
+      la unión de árboles/conjuntos en la estructura implementada. Esto tiene
+      importancia en los métodos de inserción y borrado de elementos.
+\item La estructura de splay tree que subyace a la implementación de conjunto
+      puede ser implementada sin añadir atributos adicionales a los nodos del
+      árbol (más allá del elemento y los punteros a ambos hijos). Por una 
+      mayor sencillez en la implementación he optado por añadir un atributo,
+      un puntero al nodo padre para poder actualizar sus atributos de forma 
+      sencilla en \textit{O(1)}.
+     
+\end{enumerate}
+
+\section{Algoritmos:}
+\subsection{Atributos de la clase:}
+
+Como ya hemos dicho, hemos optado por añadir como atributo propio de cada nodo
+un puntero a su nodo padre para simplificar el código. También hemos optado
+por que tanto la clase nodo (invisible al usuario) como los atributos de la 
+clase sean \textit{protected} y no \textit{private} en vista a posibles 
+modificaciones futuras y extensiones de funcionalidad mediante herencia. Abajo
+se muestra la declaración de la clase sin métodos.
+
+\begin{lstlisting}
+template<typename T, typename Comp = std::less<T>>
+class splay_tree
+{
+  protected:
+    struct Node
+    {
+      T     elem;
+      Node* left;
+      Node* right;
+      Node* parent;
+
+      Node(Node* l, T const& e, Node* r, Node* p) 
+          :elem(e),left(l),right(r),parent(p) {}
+    };
+
+    Node* root;
+    Comp  lower;
+}; //splay_tree
+\end{lstlisting}
+\subsection{Búsqueda:}
+
+Se realiza igual que en el caso de un árbol binario de búsqueda convencional 
+con la salvedad de que se realiza un splay del nodo encontrado o el último 
+nodo visitado si el elemento no se encuentra en el árbol. Recuerdo que 
+\textit{lower} es un comparador que actua sobre los elementos de tipo 
+\textit{T} (ver el código añadido abajo). Se aprecia en este método por qué el 
+comparador debe crear un orden total en el conjunto de posibles valores de 
+\textit{T}. En el bucle de descenso desde la raíz, buscando el elemento 
+recibido como parámetro, se realiza una comparación nodo a nodo. Si el 
+parámetro es menor que el elemento del nodo, la búsqueda continúa por el hijo 
+izquierdo del nodo. Si el parámetro es mayor, continúa por el hijo derecho. Si 
+un elemento no es mayor ni menor que el recibido como parámetro, el método 
+sobreentiende que es igual. Es por esto que el comparador debe establecer un 
+orden total estricto. 
+
+\begin{lstlisting}
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::find(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node != nullptr)
+  {
+    father = node;
+
+         if(lower(elem, node->elem))     node = node->left;
+    else if(lower(node->elem, elem))     node = node->right;
+    else {splay(node); return true;} // Encuentra el elemento
+  }
+
+  if(father != nullptr) splay(father);
+
+  return false;
+}
+\end{lstlisting}
+\subsection{Inserción:}
+
+La inserción es igual que en un árbol binario de búsqueda con la salvedad de 
+que al terminar el proceso se realiza una llamada al método splay con el nodo 
+insertado, de realizarse la inserción, o con aquel nodo que ya contiene la 
+clave a insertar. No incluir la función de unión de árboles descarta la 
+posibilidad de reducir la inserción de elementos a la unión del árbol actual
+con un árbol con un único nodo, el del elemento a insertar. Sí que se podía
+optar por una implementación recursiva en vez de iterativa a la hora de 
+descender por los nodos del árbol. En mi caso he optado por una implementación
+iterativa pues en la implementación recursiva, al llegar a un puntero nulo al
+final del descenso no se puede saber cuál es su nodo padre si no es añadiendo
+un atributo más como parámetro. La implementación recursiva alternativa 
+desarrollada puede verse en el fichero \textit{splay\_tree.h} como comentario
+en el código.
+
+\begin{lstlisting}
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::insert(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node != nullptr)
+  {
+    father = node;
+
+         if(lower(elem, node->elem))     node = node->left;
+    else if(lower(node->elem, elem))     node = node->right;
+    else {splay(node); return false;} // El elemento esta
+  }
+
+  // Llegados aqui el elemento no esta, lo insertamos
+  node = new Node(nullptr, elem, nullptr, father);
+
+  // Actualizamos su padre y, si es necesario la raiz
+  if(father != nullptr)
+    {if(lower(elem, father->elem)) father->left = node;
+     else                          father->right= node;}
+  else
+    root = node;
+
+  // Finalmente llevamos el nuevo nodo a la raiz
+  splay(node);  return true;
+}
+\end{lstlisting}
+\subsection{Borrado:}
+
+Al igual que en los métodos anteriores, la filosofía es la misma que en los
+árboles binarios convencionales. De nuevo la diferencia la marca la llamada al
+método splay al terminar el borrado. En algunas variantes de splay trees, se 
+opta por flotar primero el nodo a borrar a la raíz y luego borrarlo. En mi 
+caso he optado por primero borrar el elemento (de estar en el árbol) y
+entonces flotar su nodo padre. El elemento borrado se reemplaza por el menor 
+elemento del conjunto mayor que el del nodo a borrar para mantener la 
+estructura de árbol binario de búsqueda. Si el elemento a borrar no se 
+encuentra en el conjunto se llama al método splay con el último nodo visitado 
+durante la búsqueda del elemento.
+
+\begin{lstlisting}
+template<typename T, typename Comp>
+bool splay_tree<T, Comp>::erase(T const& elem)
+{
+  Node* father = nullptr; Node* node = root;
+
+  while(node)
+  {
+        if(lower(elem, node->elem)) 
+            {father = node; node = node->left;}
+   else if(lower(node->elem, elem)) 
+            {father = node; node = node->right;}
+   else break; // Llegamos al nodo a borrar
+  }
+
+  /*   ACLARACIONES:
+  *
+  *    A partir de este momento node apunta al nodo que queremos
+  *    borrar, vamos a distinguir casos segun su situacion.
+  *
+  * -> Los punteros se pueden interpretar como booleanos. En C++ 
+  *    un puntero equivale a falso si y solo si es nulo.
+  * -> El unico nodo con padre nulo es la raiz. La condicion
+  *    (father == nullptr) equivale a (node == root).
+  */
+  
+    // Si el elemento no esta, flotamos el padre y terminamos
+  if(node == nullptr) {if(father) splay(father); return false;}
+  
+  if(!node->left && !node->right)   // CASO 1: Hoja
+  {
+    if(node->parent == nullptr) root = nullptr;
+    else
+    {
+      if(node == node->parent->left)  node->parent->left = nullptr;
+      else                            node->parent->right= nullptr;
+    }
+  }
+  else if(!node->left)              // CASO 2: Solo hijo derecho
+  {
+    if(node->parent == nullptr) 
+        {root = node->right; root->parent = nullptr;}
+    else
+    {
+      node->right->parent = node->parent;
+      if(node == node->parent->left)  
+        node->parent->left = node->right;
+      else                            
+        node->parent->right= node->right;
+    }
+  }
+  else if(!node->right)             // CASO 3: Solo hijo izquierdo
+  {
+      if(node->parent == nullptr) 
+          {root = node->left;  root->parent = nullptr;}
+      else
+      {
+        node->left->parent = node->parent;
+        if(node == node->parent->left)  
+            node->parent->left = node->left;
+        else                            
+            node->parent->right= node->left;
+      }
+  }
+  else                              // CASO 4: Ambos hijos existen
+  {
+    // Hallamos el elemento que reemplace el nodo a borrar
+    Node* lessGreater = node->right; 
+    while(lessGreater->left) lessGreater = lessGreater->left;
+
+    // Lo desconectamos de su posicion
+    if(lessGreater->right)
+    {
+      lessGreater->right->parent = lessGreater->parent;
+
+      if(lessGreater == lessGreater->parent->right) 
+            lessGreater->parent->right = lessGreater->right;
+      else                                          
+            lessGreater->parent->left  = lessGreater->right;
+    }
+    else
+    {
+      if(lessGreater == lessGreater->parent->right)  
+            lessGreater->parent->right = nullptr;
+      else  
+            lessGreater->parent->left  = nullptr;
+    }
+
+    // Lo conectamos en la posicion del nodo a borrar
+    lessGreater->left  = node->left;   
+    lessGreater->right = node->right;  
+    lessGreater->parent= node->parent;
+    
+    if(node->left)   node->left->parent = lessGreater;
+    if(node->right)  node->right->parent= lessGreater;
+    
+    if(node->parent)
+      {if(node == node->parent->left) 
+            node->parent->left = lessGreater;
+       else                           
+            node->parent->right= lessGreater;}
+    else
+      root = lessGreater;
+  }
+
+  delete node;  if(father) splay(father);
+  return true;
+}
+\end{lstlisting}
+\subsection{Rotación de un nodo:}
+
+Se contemplan rotaciones hacia la izquierda o hacia la derecha en función
+de si el nodo es reemplazado por su hijo derecho o izquierdo. Estas son 
+iguales a las rotaciones de los árboles AVL u otros árboles binarios 
+balanceados pero, claro está, actualizando también el atributo añadido a los
+nodos, el nodo padre al que apuntan. Se incluye el código correspondiente a 
+una rotación hacia la izquierda, siendo el código de la rotación izquierda
+simétrico.
+
+\begin{lstlisting}
+template<typename T, typename Comp>
+void splay_tree<T, Comp>::rotateRight(Node* node)
+{
+  if(node == nullptr)
+    throw std::domain_error("Right rotation over null node!");
+
+  Node* father    = node->parent;   //Guardamos el padre
+  Node* leftChild = node->left;     //Guardamos el hijo izquierdo
+
+  if(leftChild != nullptr)
+  {
+    node->left        = leftChild->right;
+    node->parent      = leftChild;
+    leftChild->parent = father;
+    leftChild->right  = node;
+
+    if(node->left != nullptr)  node->left->parent = node;
+    if(father     != nullptr)
+      {if(node == father->left)  father->left = leftChild;
+       else                      father->right= leftChild;}
+    else
+      root = leftChild;
+  }
+}
+\end{lstlisting}
+\subsection{Splay:}
+
+El algoritmo lleva el nodo recibido como parámetro a la raiz manteniendo la
+estructura de árbol binario de búsqueda. Para esto, mientras el nodo no se sitúe en la raiz, si su nodo padre es la raíz, realiza una única rotación 
+para ocupar la posición de su nodo padre (rotación izquierda o derecha según
+corresponda). Si por contra el nodo tiene un ``nodo abuelo'' combina dos 
+rotaciones que llevan el el nodo a flotar a dos alturas menos. Al no hacer uso 
+del comparador, tanto este método como las rotaciones que emplea son 
+consistentes a pesar de que el orden inferido del comparador no sea total.
+
+
+\begin{lstlisting}
+template<typename T, typename Comp>
+void splay_tree<T, Comp>::splay(Node* node)
+{
+  if(node == nullptr)
+    throw std::domain_error("Splay over null node!");
+
+  while(node->parent)
+  {
+    if(!node->parent->parent)  // Hijo directo de la raiz
+    {
+      if(node->parent->left == node)  rotateRight(node->parent);
+      else                            rotateLeft(node->parent);
+    }
+    else                       // El nodo tiene nodo abuelo
+    {
+      Node* grandParent = node->parent->parent;
+
+      if(grandParent->left       && node==grandParent->left->left)
+       {rotateRight(grandParent);
+        rotateRight(node->parent);}
+      else if(grandParent->right && node==grandParent->right->right)
+        {rotateLeft(grandParent);
+         rotateLeft(node->parent);}
+      else if(grandParent->left  && node==grandParent->left->right)
+        {rotateLeft(node->parent);
+         rotateRight(grandParent);}
+      else if(grandParent->right && node==grandParent->right->left)
+        {rotateRight(node->parent);
+         rotateLeft(grandParent);}
+      else
+        throw "Illegal state reached during splay operation!";
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Tests:}
+Por mayor sencillez a la hora de comprobar el correcto funcionamiento de la 
+clase he incluido dos tests, uno manual y otro automático. Esta sección tiene
+el objetivo de explicar el funcionamiento de estos para que puedan ser 
+ejecutados por cualquier persona con interés en apreciar los múltiples cambios
+de estructura de los splay trees en una secuencia de operaciones. Se puede
+también fácilmente incluir mediciones del tiempo de ejecución en el test 
+automático para convencerse de que el coste amortizado de las operaciones es 
+logarítmico.
+
+Se incluye abajo el código correspondiente para ejecutar un test manual de la
+clase \textit{splay\_tree}. Este test lee por consola un código de operación
+y ejecuta la operación correspondiente:
+
+\setlength{\parskip}{0mm}         % Distance among paragraphs
+\begin{itemize}
+
+\item -1 para terminar el test.
+\item  0 para mostrar el árbol.
+\item  1 para buscar un elemento (se lee a continuación).
+\item  2 para insertar un elemento (se lee a continuación).
+\item  3 para borrar un elemento (se lee a continuación).
+     
+\end{itemize}
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+\begin{lstlisting}
+#include "splay_tree.h"
+#include <cstdlib>
+#include <time.h>
+using namespace std;
+
+int main()
+{
+  splay_tree<int> arbol;
+  int  opcode, aux; cin >> opcode;
+
+  while(opcode != -1)
+  {
+    cin >> aux;
+
+    try
+    {
+      if(opcode == 0)     {arbol.print(); cout << endl;}
+      else if(opcode == 1) arbol.find(aux);
+      else if(opcode == 2) arbol.insert(aux);
+      else if(opcode == 3) arbol.erase(aux);
+      else if(opcode == 4) {if(arbol.empty()) cout << "VACIO\n";
+                            else           cout << "NO VACIO\n";}
+    }
+    catch (const char* msg)
+    {
+      cerr << msg << endl;
+    }
+    catch (exception &e)
+    {
+      cout << e.what() << endl;
+    }
+
+    cin >> opcode;
+  }
+}
+\end{lstlisting}
+
+Se muestra a continuación el código correspondiente al test automático. 
+Realiza primero un número de inserciones de elementos aleatorios, luego una
+secuencia de búsquedas de elementos también aleatorios y en el mismo rango que
+en el caso anterior y por último una serie de borrados (en el ejemplo 1000).
+Para terminar muestra los elementos restantes en el árbol. Si sucede algún 
+error durante el test se muestra por consola la excepción recibida.
+
+\begin{lstlisting}
+#include "splay_tree.h"
+#include <cstdlib>
+#include <time.h>
+using namespace std;
+
+int main()
+{
+  splay_tree<int> arbol;
+  int upLimit = 1000, nextValue;
+  srand(time(NULL));
+
+  try
+  {
+    for(int i = 0; i < 1000; i++)
+    {
+      nextValue = rand()%upLimit;
+      arbol.insert(nextValue);
+    }
+
+    for(int i = 0; i < 1000; i++)
+    {
+      nextValue = rand()%upLimit;
+      arbol.find(nextValue);
+    }
+
+    for(int i = 0; i < 4000; i++)
+    {
+      nextValue = rand()%upLimit;
+      arbol.erase(nextValue);
+    }
+  }
+  catch (const char* msg)  {
+    cerr << msg << endl;
+  }
+  catch (exception &e)  {
+    cout << e.what() << endl;
+  }
+
+  arbol.print(); 
+}
+\end{lstlisting}
+
+
+%++++++++++++++++++++++++++++++++++++++++
+% References section will be created automatically 
+% with inclusion of "thebibliography" environment
+% as it shown below. See text starting with line
+% \begin{thebibliography}{99}
+% Note: with this approach it is YOUR responsibility to put them in order
+% of appearance.
+
+\begin{thebibliography}{99}
+
+\bibitem{ApuntesRicardo}
+Ricardo Peña, \textit{Árboles de búsqueda autoajustables (Splay trees)}, 
+(Apuntes de la asignatura "Métodos algorítmicos en resolución de problemas",
+Facultad de informática, Universidad Complutense, Madrid, curso 2015/16).
+
+\bibitem{Horowitz}
+E. Horowitz, S. Sahni, and D. Mehta. \textit{Fundamentals of Data 
+Structures in C++}. Computer Science Press, 4th edition, 1997. Capítulo 10.7.
+
+\bibitem{Codeforces}
+\textit{Splay tree and it's implementation},  available at 
+\texttt{https://codeforces.com/blog/entry/18462}.
+
+\bibitem{Wikipedia} 
+\textit{Splay tree},  available at 
+\texttt{http://en.wikipedia.org/wiki/Splay\_tree}.
+
+\end{thebibliography}
+
+
+\end{document}
