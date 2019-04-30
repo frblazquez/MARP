@@ -106,13 +106,64 @@ presentadas a un problema planteado en clase, el problema de la mochila múltipl
 %INICIO DEL CUERPO DEL DOCUMENTO
 %--------------------------------------------------------------------------
 \section{Introducción}
-Hola caracola, en esto he usado \cite{CPW}
+
+El ajedrez es sin lugar a dudas uno de los juegos más extendidos y con mayor 
+impacto en nuestra sociedad. Es de sobra conocido por todos su alta complejidad 
+y la dificultad de alcanzar un buen nivel de juego en este. Esto, junto con toda
+la historia que acarrea este deporte así como con la concepción social del juego,
+muchas veces tan relacionado con la inteligencia, concentración y el desarrollo 
+cognitivo lo ha hecho objeto de estudio tantas veces hasta nuestros tiempos.
+
+Es por tanto lógico que, con el auge de la computación y la aparición de nuevas
+ramas del conocimiento en este ámbito (como la \textit{inteligencia artificial})
+se tratara de aplicar los nuevos conocimientos y nuevas técnicas a la resolución
+de este juego. El término ``resolución'' ha sido empleado a drede pues, en contra
+de lo que mucha gente pueda pensar, no se conoce (tampoco por los motores de juego
+más potentes) una estrategia de juego perfecto, esto es, que garantice el mejor
+resultado posible partiendo de una posición dada cualquiera (resolución fuerte 
+en el sentido de \cite{Checkers is solved}) ni tampoco una estrategia que garantice
+la victoria para algún bando o las tablas a partir de la posición inicial (resolución
+débil en el sentido de \cite{Checkers is solved}). Es más, también se desconoce 
+si la aparente ventaja de las blancas en la posición incial permitiría que, con
+juego perfecto (independientemente de conocer la estrategia) se pudiera forzar 
+siempre una victoria o un empate. 
+
+El hecho del que surge esta confusión, pensar que el ajedrez posee una estrategia 
+de juego óptima que puede ser calculada por los ordenadores modernos, es la abismal
+superioridad con respecto al juego humano de estos en la actualidad. Es más, el
+desarrollo de motores de juego para el ajedrez en computadoras, en un principio 
+antagonista al juego humano y rechazado por gran parte de la élite del ajedrez 
+mundial, rápidamente con la mejora de los ordenadores personales se confirmó como 
+la más útil herramienta para el aprendizaje y el estudio del ajedrez. Actualmente,
+los grandes jugadores cuentan como herramienta imprescindible de estudio y mejora
+de su juego con unas grandes bases de datos de aperturas (primeros movimientos de
+cada partida) y un potente motor de ajedrez que les permite analizar posiciones
+concretas y analizar sus errores en partidas ya disputadas. Esto se opone a las 
+legiones de analistas que antiguamente rodeaban a los jugadores de primera fila
+mundial. Gracias a esto, el ajedrez humano de alto nivel se ha ``democratizado'',
+siendo posible mejorar enormemente en breves periodos de tiempo a cualquier jugador
+con buena capacidad de juego y motivación con la única ayuda de un sencillo motor
+de análisis. Esto se puede apreciar en el gran aumento del numero de jugadores con
+un ELO \cite{Intro5} mayor de 2000 puntos.
 
 
+Es el propósito de este breve artículo introducir algunas técnicas 
+(principalmente algorítmicas) que, junto con la gran capacidad de cómputo de los
+procesadores actuales hacen que los mejores jugadores de ajedrez del mundo 
+actualmente no sean de carne y hueso. La mayoría de estas técnicas aparecen en
+\cite{CPW} aunque de forma poco profunda  (especialmente en cuanto a los esquemas
+algorítmicos se refiere). Esta ha sido la fuente principal de información de este
+artículo a partir de la cual otras muchasreferencias han completado los puntos 
+que no quedaban totalmente claros o eran en exceso ambiguos. Para una introducción
+más profunda al terreno de los motores de ajedrez y su historia, desde sus inicios
+hasta la actualidad, donde el motor de Google AlphaZero desarrollado con técnicas
+distintas a los motores de ajedrez clásicos (basadas en inteligencia artificial y
+redes neuronales) venció al considerado mejor motor de ajedrez, Stockfish 10, 
+pasando por el conocido caso de Deep Blue y la primera victoria a un vigente 
+campeón del mundo recomiendo leer \cite{Intro1, Intro2, Intro3, Intro4}.
 
-%\cite{melissinos, Cyr, Wiki}   % Para tener un ejemplo de cómo citar
 
-\section{Implementación}
+\section{Fundamentos del desarrollo de motores de juego}
 
 \section{Algoritmos}
 \subsection{Atributos de la clase}
@@ -156,13 +207,74 @@ int main()
 
 \begin{thebibliography}{99}
 
+% General, la joya de la corona de la bibliografía:
 \bibitem{CPW}
 \textit{Chess Programming Wiki}. Versión del 15 de abril de 2019. Disponible en: \\
 \url{https://www.chessprogramming.org/Main_Page}
 
+% Otras dos joyas de la revista science:
+\bibitem{Checkers is solved}
+Schaeffer, Burch, Björnsson, Kishimoto Müller, Lake, Lu, Sutphen. (2007). ``Checkers is solved''. \textit{Revista Science} 317, (5844), 1518-1522. Artículo disponible en: \\
+\url{https://science.sciencemag.org/content/317/5844/1518/tab-pdf}
 
+\bibitem{AlphaZero}
+Silver, Hubert, Schrittwieser, Antonoglou , Lai, Guez, Lanctot , Sifre, Kumaran, 
+Graepel, Lillicrap, Simonyan, Hassabis. (2018). ``A general reinforcement learning 
+algorithm that masters chess, shogi, and Go through self-play''. \textit{Revista 
+Science} 362 (6419), 1140-1144. Artículo disponible en: \\
+\url{https://science.sciencemag.org/content/362/6419/1140/tab-pdf}
+
+% Una fuente de información perfecta
+\bibitem{Recommended Reading}
+\textit{Lecturas recomendadas}. Versión del 16 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Recommended_Reading}
+
+% Historia y bibliografía poco importante para la introducción:
+\bibitem{Intro1}
+\textit{Computer chess}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://en.wikipedia.org/wiki/Computer_chess}
+
+\bibitem{Intro2}
+\textit{History of computer chess}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/History}
+
+\bibitem{Intro3}
+\textit{Deep Blue}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://en.wikipedia.org/wiki/Deep_Blue_(chess_computer)} \\
+\url{https://en.wikipedia.org/wiki/Deep_Blue_versus_Garry_Kasparov}
+
+\bibitem{Intro4}
+\textit{AlphaZero}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://en.wikipedia.org/wiki/AlphaZero} \\
+\url{https://en.wikipedia.org/wiki/Leela_Chess_Zero}
+
+\bibitem{Intro5}
+\textit{Sistema de puntuación ELO}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://es.wikipedia.org/wiki/Sistema_de_puntuacion_Elo}
+
+% Introducciones al desarrollo:
+\bibitem{Fundamentos1}
+\textit{Getting Started in chess programming}. Versión del 18 de abril de 2019. 
+Disponible en: \\
+\url{https://www.chessprogramming.org/Getting_Started}
+
+\bibitem{Fundamentos2}
+\textit{Chess Programming Part I: Getting Started}. Versión del 18 de abril de 2019. 
+Disponible: \\
+\url{http://archive.gamedev.net/archive/reference/articles/article1014.html}
+
+
+% Motores de juego:
+\bibitem{Open Source Chess Engines}
+\textit{Open source chess engines}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Category:Open_Source}
+
+\bibitem{Stockfish}
+\textit{Stockfish}. Versión del 18 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Stockfish}
 
 \end{thebibliography}
 
 
 \end{document}
+
