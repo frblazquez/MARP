@@ -355,14 +355,95 @@ Existen otras muchas estructuras para la representación del estado del tablero 
 sin embargo, muchas han caído en desuso. Actualmente las más usadas son los bitboards así
 como soluciones híbridas, que representan tanto el tablero entero como bitboards para las
 piezas individuales reduciendo al máximo los tiempos de comprobaciones a cambio de pagar
-los costes en tiempo de las actualizaciones de ambas representaciones.
+los costes en tiempo de las actualizaciones de ambas representaciones. Otra representación
+poco usada internamente en los motores de ajedrez pero ampliamente usada para la 
+depuración y las interfaces de usuario (es siempre común que todo motor de ajedrez permita
+conversiones de la representación interna a esta) es la notación FEN \cite{Intro6}. Para
+ver también como la codificación Huffman ayudaba en la primera etapa del desarrollo de 
+estos motores a crear representaciones con un menor coste en memoria véase 
+\cite{BoardRepresentation3}.
     
 
 \section{Generación de movimientos}
 
+Llegamos ahora a un punto clave de nuestro motor de ajedrez. La generación de movimientos
+así como la evaluación de la posición serán las tareas que más tiempo involucren 
+(ejecutándose como parte de la búsqueda del mejor movimiento). En otros juegos como las
+damas o el Go, la generación de movimientos (viene a ser la exploración del árbol de 
+posibilidades) es mucho más sencilla. En el ajedrez sin embargo las reglas del juego
+complican esto sobremanera. Como ya es sabido, no se permite que el rey del jugador que
+mueve quede en jaque tras el movimiento, cada pieza tiene unas reglas de movimiento 
+distintas, la movilidad de las piezas depende también de las piezas a su alrededor, las
+capturas de peones al paso... 
+
+Además, recordamos un par de puntos bastante obvios. El primero es la total 
+dependencia con las estructuras de datos elegidas para la representación del tablero.
+El segundo es la gran insistencia por parte de los desarrolladores de motores de 
+ajedrez en que tanto esta parte, como la representación del tablero engloben a la 
+perfección todas las reglas del ajedrez y estén libres de errores o \textit{bugs}.
+Pese a la encapsulación de esta parte del código, es prácticamente imposible depurar
+comportamientos anómalos en la búsqueda del mejor movimiento causados por alguna carencia
+de las partes anteriores. Todo motor de ajedrez consta también de unos ejemplos de 
+ejecuciones de movimientos que se ejecutan sobre la representación ideada y se contrastan 
+con su resultado precalculado a modo de test.
+
+Volviendo a la generación de movimientos propiamente dicha, cuando un humano juega al 
+ajedrez identifica (generalmente ayudado de la experiencia y el instinto) unos pocos 
+movimientos como factibles descartando desde el principio otros por abusrdos o carentes 
+de sentido con el plan de juego. Esta fue la primera aproximación también para los
+computadores, sin embargo, ni tan siquiera la aproximación desarrollada en la unión 
+soviética con ayuda del campeón del mundo Mikhail Botvinik desarrolló un juego de alto
+nivel. 
+
+Además, este sistema exigía costosas evaluaciones de la posición y de los movimientos 
+para seleccionar cuales valía la pena explorar. Se llegó entonces a la conclusión 
+(generalizada hoy en día) de que era necesario una búsqueda completa del árbol de 
+posibilidades para que los motores de juego alcanzaran un nivel sobrehumano. Esto es,
+dada una posición, tendremos que analizar todos los posibles movimientos a partir de
+esta, sin descartar ninguno. Posteriormente en la búsqueda es posible que a niveles
+inferiores del árbol de búsqueda se puedan podar ciertas ramas de exploración. 
+Sin embargo, a pesar de que tengamos que generar todos los posibles movimientos para
+obtener un buen nivel de juego, para minimizar el número de posiciones a explorar 
+(normalmente con una variante del algoritmo $\alpha - \beta$ como se verá después) es
+común el uso de alguna función de rápida evaluación para ordenar estos movimientos
+de más a menos prometedores. Otras técnicas comunes son analizar primero las capturas
+de piezas y estas ordenadas de mayor a menor importancia de la pieza a capturar.
+
+Para acelerar la generación de movimientos suele ser usual un preprocesado en el que 
+se almacenan en bitboards las posiciones de ataque de cada pieza (o únicamente de las
+piezas de largo alcance) sin contar con las piezas que se puedan interponer en su camino,
+únicamente contando con los límites del tablero. Así, para el movimiento de las torres,
+alfiles y la reina los posibles movimientos se hallan con un recorrido lineal por las
+casillas preprocesadas hasta llegar al borde del tablero o a una pieza amiga o enemiga. 
+La ventaja de estos mapas de ataque es que permiten la generación de movimientos de 
+forma muy sencilla y su actualización es también rápida (en el caso de torres y alfiles,
+una de las dos direcciones de movimiento siempre permanecerá inalterada).
+
 
 \section{Evaluación de la posición}
 
+En el ajedrez, y esto se puede comprobar experimentalmente habiendo implementado el
+apartado anterior, en una posición normal el jugador con el turno dispone de unos treinta
+movimientos posibles. Además, estos habilitarán e imposibilitarán nuevos movimientos.
+En otras palabras, nuestro árbol de exploración va a ser exponencial (y con una base
+elevada). Además, ya aventurábamos en el apartado 2 que el ajedrez no es un juego que 
+esté resuelto, no se conoce una estrategia que aplicar dada una posición para no meter
+la pata y darle ventaja al oponente. Nuestra única posibilidad es por tanto explorar
+las repercusiones de cada movimiento y quedarnos con el que nos permita obtener una 
+cierta ventaja o, ceder lo mínimo posible ante nuestro oponente.
+
+Esto sería muy fácil de desarrollar con algoritmos vistos en clase si el ajedrez fuera
+mucho menos profundo. Hemos visto por ejemplo que para hallar la mejor jugada en el juego
+de las n cerillas bastaba con generar el árbol de juego y aplicar el algoritmo min-max
+asignando un valor 1 a las hojas en las que resultábamos ganadores y un -1 a las hojas en
+las que vencía el oponente. Pues bien, en el ajedrez esto no es posible. No nos es posible
+debido a la naturaleza exponencial del árbol de búsqueda. Llegar a todas las hojas (finales
+de partida) a partir de una determinada posición queda definitivamente lejos de la 
+capacidad de cómputo actual.
+
+Es por esto que se opta por truncar el árbol a partir de cierta profundidad (dependiendo
+de la plataforma y sus capacidades). La filosofía será la misma que en el algoritmo min-max
+pero elegiremos el movimiento que nos lleve a una mejor posición.
 
 \section{Elección del movimiento}
 
@@ -448,6 +529,10 @@ Science} 362 (6419), 1140-1144. Artículo disponible en: \\
 \textit{Sistema de puntuación ELO}. Versión del 17 de abril de 2019. Disponible en: \\
 \url{https://es.wikipedia.org/wiki/Sistema_de_puntuacion_Elo}
 
+\bibitem{Intro6}
+\textit{Forsyth–Edwards Notation}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation}
+
 % Introducciones al desarrollo:
 \bibitem{Fundamentos1}
 \textit{Getting Started in chess programming}. Versión del 18 de abril de 2019. 
@@ -473,6 +558,10 @@ Disponible: \\
 \textit{Board representation (chess)}. Versión 18 de abril de 2019. Disponible en: \\
 \url{https://en.wikipedia.org/wiki/Board_representation_(chess)#Huffman_encodings}
 
+\bibitem{BoardRepresentation4}
+\textit{Data structures for chess programs}. Jean Goulet. McHill University. Disponible 
+en: \\ \url{http://digitool.library.mcgill.ca/R/?func=dbin-jump-full&object_id=65427}
+
 % Generación de movimientos:
 \bibitem{MoveGeneration1}
 \textit{Move generation}. Versión del 17 de abril de 2019. Disponible en: \\
@@ -481,6 +570,15 @@ Disponible: \\
 \bibitem{MoveGeneration2}
 \textit{Chess Programming Part III: Move Generation}. Versión del 17 de abril de 2019.
 \\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-iii-move-generation-r1126}
+
+% Evaluación de la posición:
+\bibitem{Evaluation1}
+\textit{Evaluation}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Evaluation}
+
+\bibitem{Evaluation2}
+\textit{Chess Programming Part VI: Evaluation Functions}. Versión del 17 de abril de 2019.
+\\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-vi-evaluation-functions-r1208}
 
 % Motores de juego:
 \bibitem{Open Source Chess Engines}
