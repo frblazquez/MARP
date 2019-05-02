@@ -76,6 +76,33 @@ backgroundcolor=\color{gray75},
 }
 
 %--------------------------------------------------------------------------
+%   PARA INCLUIR TABLEROS DE AJEDREZ ESCRITOS
+%--------------------------------------------------------------------------
+\usepackage{xskak}
+\usepackage{chessboard}
+
+\usepackage{chessfss}
+
+\newlength{\symsize}\setlength{\symsize}{24pt}
+\newlength{\boardwidth}\setlength{\boardwidth}{8\symsize}
+\setboardfontsize{\symsize}
+
+\newcommand{\board}[1]{\setlength{\fboxsep}{0pt}%
+\fbox{\parbox{\boardwidth}{\setlength{\baselineskip}{\symsize}#1}}}
+\newcommand{\row}[1]{\parbox[c][\symsize]{\symsize}{\hfill{#1}}}
+\newcommand{\col}[1]{\parbox[b]{\symsize}{\hfil{#1}}}
+\newcommand{\chessboardB}[1]{\begin{tabular}{cc}
+\parbox{\symsize}{\setlength{\baselineskip}{\symsize}
+\row{8} \row{7} \row{6} \row{5} \row{4} \row{3} \row{2} \row{1}}&\board{#1}\\
+\row{ } &\mbox{\col{a}\col{b}\col{c}\col{d}\col{e}\col{f}\col{g}\col{h}}
+\end{tabular}}
+
+\newcommand{\TextOnWhite}[1]{\WhiteEmptySquare\hspace{-\symsize}%
+\raisebox{.35\symsize}{\makebox[\symsize][c]{\small #1}}}
+\newcommand{\TextOnBlack}[1]{\BlackEmptySquare\hspace{-\symsize}%
+\raisebox{.35\symsize}{\makebox[\symsize][c]{\small #1}}}
+
+%--------------------------------------------------------------------------
 % INICIO DEL DOCUMENTO - TÍTULO, AUTOR, FECHA ...
 %--------------------------------------------------------------------------
 \begin{document}
@@ -165,12 +192,180 @@ campeón del mundo recomiendo leer \cite{Intro1, Intro2, Intro3, Intro4}.
 
 \section{Fundamentos del desarrollo de motores de juego}
 
-\section{Algoritmos}
-\subsection{Atributos de la clase}
-\subsection{Inserción}
-\subsection{Borrado}
-\subsection{Rotación de un nodo}
-\subsection{Splay}
+Los motores de ajedrez requieren irremediablemente de una serie de componentes para
+funcionar. Tratamos aquí de introducirlos dando así al mismo tiempo una visión más 
+global de la estructura de este documento.
+
+El primero de ellos, como no podía ser de otra forma, es una representación
+del tablero y de las piezas, más aún que esto, una representación del estado del 
+tablero. Hace falta una representación del tablero completa más alla del tablero y la
+colocación de sus piezas pues, una misma situación del tablero puede darse con el turno
+de movimiento para las blancas o para las negras. Otros factores que considerar son los
+derechos de enroque de ambos reyes (pueden ser distintos en posiciones con idéntica
+distribución) y el número de movimientos reversibles consecutivos por parte de ambos 
+oponentes (pues llegar a 50 de estos movimientos consecutivos implica las tablas). Esta
+es la parte más técnica del desarrollo del motor de juego, requiere tomar una serie de
+decisiones de desarrollo (principalmente las estructuras de datos que subyacen a esta
+representación) que son cruciales para posteriormente la ejecución de los movimientos y
+la exploración del árbol de juego.
+
+El segundo de estos componentes es un mecanismo para detectar y poder ejecutar (de la 
+forma más rápida posible, este punto será crítico para el rendimiento) los movimientos
+legales a partir de una posición dada, esto es, de su representación interna. Vemos así
+claramente que hay una dependencia absoluta con la representación del tablero elegida.
+
+Partiendo de esta base, que constituye el cuerpo de todo motor de ajedrez (una
+representación interna que permite la ejecución sobre ella de cualquier partida de ajedrez
+con las reglas de juego actuales) tenemos que construir un sistema ``inteligente'', que
+sepa por sí mismo decidir que movimiento ejecutar ante cada posición del tablero. Surge 
+así la necesidad de incorporar dos nuevos elementos a nuestro motor de ajedrez. Un sistema
+de evaluación que nos permita intuir qué posiciones son favorables para nosotros y qué 
+posiciones son favorables para nuestro adversario y, teniendo esto, un mecanismo para 
+explorar las posibles posiciones causadas por un movimiento. Esto último, un mecanismo de 
+búsqueda en el árbol de posibles movimientos.
+
+Entraremos ahora más en detalle en la representación del tablero, movimientos, evaluación
+de las posiciones y especialmente en algoritmos de búsqueda. Todas las fuentes consultadas
+pueden verse en la bibliografía, pero he optado por destacar en este punto las empleadas en
+esta breve introducción para desarrolladores \cite{Fundamentos2, Fundamentos1}. Una gran 
+fuente de ejemplos concretos de motores de ajedrez desarrollados y de código abierto puede
+consultarse en \cite{Open Source Chess Engines}.
+
+
+\section{Representación del tablero}
+
+Como ya hemos dicho, las decisiones de implementación que tomemos en este punto son 
+cruciales para el rendimiento final de nuestro motor de juego. De estas depende
+directamente el coste de analizar los movimientos posibles y ejecutarlos, la base de
+nuestro sistema de búsqueda del mejor movimiento. Otro factor a tener en cuenta es la
+cantidad de memoria de la que puede disponer nuestro motor durante la ejecución. Algunas 
+estructuras presentadas fueron ampliamente usadas en la segunda mitad del siglo XX y
+posteriormente cayeron paulatinamente en desuso con el aumento de la capacidad de las 
+memorias. Analizamos ahora una serie de estructuras de datos ideadas para la 
+representación de un tablero de ajedrez. Para una información más detallada recomiendo
+consultar \cite{BoardRepresentation1, BoardRepresentation2, BoardRepresentation3}.
+
+\begin{itemize}
+    \item \textbf{Tablero 8x8:} \\
+    Primera aproximación surgida, consistente en la representación de la totalidad del
+    tablero, las 64 casillas, indicando en cada una la presencia o ausencia de una pieza,
+    el tipo de esta y su color. Generalmente se implementa con un array unidimensional
+    de longitud 64 indexado como se ve en la figura.
+    
+%    \begin{center}
+%        \chessboard[showmover=false]
+%    \end{center}
+    
+    \begin{center}\chessboardB{
+    \TextOnWhite{56}\TextOnBlack{57}\TextOnWhite{58}\TextOnBlack{59}%
+    \TextOnWhite{60}\TextOnBlack{61}\TextOnWhite{62}\TextOnBlack{63}\\
+    \TextOnBlack{48}\TextOnWhite{49}\TextOnBlack{50}\TextOnWhite{51}%
+    \TextOnBlack{52}\TextOnWhite{53}\TextOnBlack{54}\TextOnWhite{55} \\
+    \TextOnWhite{40}\TextOnBlack{41}\TextOnWhite{42}\TextOnBlack{43}%
+    \TextOnWhite{44}\TextOnBlack{45}\TextOnWhite{46}\TextOnBlack{47}\\
+    \TextOnBlack{32}\TextOnWhite{33}\TextOnBlack{34}\TextOnWhite{35}%
+    \TextOnBlack{36}\TextOnWhite{37}\TextOnBlack{38}\TextOnWhite{39} \\
+    \TextOnWhite{24}\TextOnBlack{25}\TextOnWhite{26}\TextOnBlack{27}%
+    \TextOnWhite{28}\TextOnBlack{29}\TextOnWhite{30}\TextOnBlack{31}\\
+    \TextOnBlack{16}\TextOnWhite{17}\TextOnBlack{18}\TextOnWhite{19}%
+    \TextOnBlack{20}\TextOnWhite{21}\TextOnBlack{22}\TextOnWhite{23} \\
+    \TextOnWhite{8}\TextOnBlack{9}\TextOnWhite{10}\TextOnBlack{11}%
+    \TextOnWhite{12}\TextOnBlack{13}\TextOnWhite{14}\TextOnBlack{15}\\
+    \TextOnBlack{0}\TextOnWhite{1}\TextOnBlack{2}\TextOnWhite{3}%
+    \TextOnBlack{4}\TextOnWhite{5}\TextOnBlack{6}\TextOnWhite{7}
+    }\end{center}
+    
+    Así, se puede conseguir una representación completa del tablero con 64B (un byte
+    por casilla es suficiente para todas las posibilidades), necesitando además de esto
+    únicamente almacenar derechos de enroque, derechos de comer al paso y turno de juego.
+    Es fácil ver, sin embargo, que buscar todos los movimientos posibles para un jugador
+    requiere recorrer todo el tablero y, para cada pieza de este jugador, explorar todas
+    las posibles casillas de destino (viendo si están ocupadas por una pieza propia).
+    Además, surgieron problemas con esta representación en la detección de movimientos
+    que podían ``salir'' del tablero, movimientos a índices fuera de los contemplados.
+
+    \item \textbf{Tablero 10x12:}\\
+    Es fácil ver que con la indexación dada a las casillas del tablero en la estructura
+    de datos del apartado anterior, moverse a la casilla superior es sumar ocho al 
+    índice, a la inferior restar ocho, a la casilla de la derecha es sumar uno (¡no 
+    siempre!) y a la de la izquierda es restar uno (¡no siempre!). Sin embargo, como se
+    ve fácilmente, en los bordes del tablero surgen situaciones anómalas como sobrepasar
+    el rango permitido del índice o hacer ``saltos de tablero'' de la columna derecha a
+    la izquierda. Esto hacía muy costosas la comprobación de la legalidad de los
+    movimientos generados y, por tanto, aumentaba el coste de la generación de 
+    movimientos, punto crítico para el rendimiento del motor. Se ideó entonces esta 
+    estructura que engloba el tablero con un margen de casillas marcadas como ilegales.
+    Son necesarias las dos filas completas superiores e inferiores debido al movimiento
+    de los caballos, que saltan siempre a casillas separadas por una fila completa a su
+    posición original.
+    
+    De esta forma se reducen los costes de comprobación de la legalidad de un movimiento
+    y se mantienen los mismos costes de búsqueda de piezas, ejecución de movimiento... 
+    Sin embargo, juegue el bando que juege, saber sus posibles movimientos implica buscar
+    por todo el tablero sus piezas (técnica que se puede mejorar con un procesado por cada
+    movimiento y respuesta o bien añadiendo estructuras de datos adicionales). Esto hizo
+    que esta estructura cayera en desuso. La imagen de abajo muestra un esquema de la 
+    representación en tableros 10x12.
+    
+    \begin{center}
+         \chessboard
+         [
+            maxfield=j12,
+            startfen=b10,
+            addfen=rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RBNQKBNR,
+            emphstyle=\color{red},
+            emphareas={a12-j11, a1-j2, a3-a10, j3-j10},
+            labelleftwidth=1.5ex,
+            showmover=false
+        ]   
+    \end{center}
+
+    \item \textbf{Lista de piezas:} \\
+    Frente a las dos representaciónes anteriores, centradas en la representación del 
+    tablero completo, surge la idea de que representar las casillas vacías es innecesario
+    y complica y aumenta el coste de las búsquedas. De esta forma diversos motores optan
+    por la representación del tablero como listas de piezas (blancas y negras) con su
+    posición asociada. Así, saber si determinada casilla está libre u ocupada tiene un
+    coste mayor (pasa de ser constante a ser del orden del número de piezas que quedan
+    en el tablero) pero, a cambio, el coste de la generación de los movimientos legales a
+    partir de una determinada posición es menor. En cualquier caso, esta estructura de
+    datos simplifica la representación del tablero pero complica también la implementación
+    de búsqueda de movimientos, lo que hace que en la práctica la mejora del rendimiento
+    sea nula.
+    
+    \item \textbf{Bitboards:} \\
+    Con la aparición de los procesadores de 64 bits, surge una idea muy interesante para
+    aplicar al desarrollo de los motores de ajedrez (así como de damas o cualquier juego 
+    sobre un tablero de 64 casillas). La idea es que, en una única palabra de 64 bits, 
+    puedo reflejar una determinada condición en todas las casillas del tablero. Esto 
+    permite que gran parte de las comprobaciones se reduzcan a operaciones lógicas 
+    soportadas por el procesador y, por tanto, ejecutables en un número muy bajo de ciclos.
+    
+    Por ejemplo, podemos tener en una sola palabra de memoria la situación de todos los
+    peones blancos (1 en la posición i-ésima implica que hay un peón blanco en esa 
+    casilla). Es más, esta idea no vale únicamente para la representación de piezas, sino
+    también para considerar casillas de ataque y procesarlas rápidamente. Si tuvieramos
+    las casillas a las que pueden saltar los caballos negros, para saber qué peones blancos
+    se pueden comer los caballos negros simplemente tendríamos que hacer la AND lógica
+    de los dos bitboards introducidos.
+    
+\end{itemize}
+    
+Existen otras muchas estructuras para la representación del estado del tablero de juego,
+sin embargo, muchas han caído en desuso. Actualmente las más usadas son los bitboards así
+como soluciones híbridas, que representan tanto el tablero entero como bitboards para las
+piezas individuales reduciendo al máximo los tiempos de comprobaciones a cambio de pagar
+los costes en tiempo de las actualizaciones de ambas representaciones.
+    
+
+\section{Generación de movimientos}
+
+
+\section{Evaluación de la posición}
+
+
+\section{Elección del movimiento}
+
 
 \appendix
 \section{Tests}
@@ -214,7 +409,8 @@ int main()
 
 % Otras dos joyas de la revista science:
 \bibitem{Checkers is solved}
-Schaeffer, Burch, Björnsson, Kishimoto Müller, Lake, Lu, Sutphen. (2007). ``Checkers is solved''. \textit{Revista Science} 317, (5844), 1518-1522. Artículo disponible en: \\
+Schaeffer, Burch, Björnsson, Kishimoto Müller, Lake, Lu, Sutphen. (2007). ``Checkers is 
+solved''. \textit{Revista Science} 317, (5844), 1518-1522. Artículo disponible en: \\
 \url{https://science.sciencemag.org/content/317/5844/1518/tab-pdf}
 
 \bibitem{AlphaZero}
@@ -263,6 +459,28 @@ Disponible en: \\
 Disponible: \\
 \url{http://archive.gamedev.net/archive/reference/articles/article1014.html}
 
+% Representación del tablero:
+\bibitem{BoardRepresentation1}
+\textit{Board representation}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Board_Representation}
+
+\bibitem{BoardRepresentation2}
+\textit{Chess Programming Part II: Data Structures}. Versión 18 de abril de 2019. 
+Disponible: \\
+\url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-ii-data-structures-r1046}
+
+\bibitem{BoardRepresentation3}
+\textit{Board representation (chess)}. Versión 18 de abril de 2019. Disponible en: \\
+\url{https://en.wikipedia.org/wiki/Board_representation_(chess)#Huffman_encodings}
+
+% Generación de movimientos:
+\bibitem{MoveGeneration1}
+\textit{Move generation}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Move_Generation}
+
+\bibitem{MoveGeneration2}
+\textit{Chess Programming Part III: Move Generation}. Versión del 17 de abril de 2019.
+\\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-iii-move-generation-r1126}
 
 % Motores de juego:
 \bibitem{Open Source Chess Engines}
