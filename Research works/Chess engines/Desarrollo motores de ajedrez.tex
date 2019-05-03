@@ -103,6 +103,11 @@ backgroundcolor=\color{gray75},
 \raisebox{.35\symsize}{\makebox[\symsize][c]{\small #1}}}
 
 %--------------------------------------------------------------------------
+%   PARA INCLUIR LA FUNCIÓN DE EVALUACIÓN
+%--------------------------------------------------------------------------
+\usepackage{amsmath}
+
+%--------------------------------------------------------------------------
 % INICIO DEL DOCUMENTO - TÍTULO, AUTOR, FECHA ...
 %--------------------------------------------------------------------------
 \begin{document}
@@ -438,18 +443,76 @@ de las n cerillas bastaba con generar el árbol de juego y aplicar el algoritmo 
 asignando un valor 1 a las hojas en las que resultábamos ganadores y un -1 a las hojas en
 las que vencía el oponente. Pues bien, en el ajedrez esto no es posible. No nos es posible
 debido a la naturaleza exponencial del árbol de búsqueda. Llegar a todas las hojas (finales
-de partida) a partir de una determinada posición queda definitivamente lejos de la 
-capacidad de cómputo actual.
+de partida) a partir de una posición no final queda definitivamente lejos de 
+la capacidad de cómputo actual.
 
 Es por esto que se opta por truncar el árbol a partir de cierta profundidad (dependiendo
 de la plataforma y sus capacidades). La filosofía será la misma que en el algoritmo min-max
-pero elegiremos el movimiento que nos lleve a una mejor posición.
+pero elegiremos el movimiento que nos lleve a una mejor posición tras este número 
+predeterminado de movimientos. Por contra, tenemos que definir entonces qué entendemos por 
+una mejor o peor posición. El problema de evaluación consiste entonces de definir una 
+función que para cada posible representación del tablero nos indique (de forma
+cuantitativa) lo favorable o desfavorable que es esta para cada jugador. Esto va a ser 
+clave pues, nuestro motor de ajedrez va a tomar mejorar esta función como único objetivo. 
+De hecho, el mismo motor (misma representación y mismo esquema de búsqueda) con una 
+distinta función de evaluación podría desarrollar un juego totalmente distinto. 
 
-\section{Elección del movimiento}
+Ni que decir tiene que, para un juego tan antiguo y que tantas pasiones ha desatado como
+es el ajedrez, se han escrito ríos de tinta sobre evaluación de posiciones. Para los 
+jugadores no principiantes es claro que el control del centro del tablero, la movilidad,
+coordinación, nivel de desarrollo de las piezas, cantidad de piezas de cada bando
+(cómo no), debilidades en las estructuras de peones, debilidades en la defensa del rey y
+otros muchos factores son de importante consideración en la evaluación de una posición.
+No es el objetivo de este trabajo discutir qué ponderación para todos estos factores 
+sería la correcta. Si que entra dentro de nuestro objetivo sin embargo aclarar que la 
+función de evaluación es la base para la toma de decisiones en la elección del movimiento 
+de forma automática por parte de nuestro motor de ajedrez y, que debe aproximar lo más 
+fielmente la realidad (si, por ejemplo, en nuestra función de evaluación los peones 
+tuvieran un mayor peso que el rey, nuestro motor optaría por defender todos los peones en 
+el tablero aún a costa de recibir jaque mate, lo que es absurdo). Otro error posible de
+las funciones de evaluación es olvidar que el sistema de juego de un motor de ajedrez
+(o al menos de los motores de ajedrez de alto nivel) es radicalmente distinto al juego 
+humano. Hay posiciones de alta complejidad para un humano (con muchas piezas activas y 
+muchos cambios posibles) que no deben ser penalizadas por nuestra función de evaluación 
+pues, como hemos aclarado, el motor de juego analizará todas las posibles jugadas sin
+excepción y la penalización en tiempo, lógicamente, sera varios órdenes de magnitud menor
+que en el juego humano y con una probabilidad de error mucho menor. Complicaciones que
+suelen ser evitadas en determinadas circunstancias por jugadores humanos (también de alto 
+nivel) aquí dejan de ser en absoluto indeseables.
+
+Más información sobre esto puede verse en \cite{Evaluation1, Evaluation2}. Una función de
+evaluación bastante eficaz y sencilla puede ser la siguiente (valores positivos significan
+ventaja blanca):
+
+\begin{align*}
+  E() &= \begin{aligned}[t]
+      &200(K-K') + 9(Q-Q') + 5(R-R') + 3(B-B' + N-N') + \\ 
+      &1(P-P') - 0.5(d-d' + b-b' + s-s') + 0.1(M-M')
+       \end{aligned}
+\end{align*}
+
+K,Q,R,B,N,P = Número de reyes, reinas, torres, alfiles, caballos y peones respectivamente. 
+\\  d,b,s \hspace{14mm} = Número de peones doblados, bloqueados o solitarios. 
+\\ M \hspace{19mm} = Movilidad, número de movimientos legales.
 
 
+\section{Búsqueda}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 \appendix
-\section{Tests}
+\section{Aplicación de estas técnicas a problemas conocidos}
 Por mayor sencillez a la hora de comprobar el correcto funcionamiento de la 
 clase he incluido dos tests, uno manual y otro automático. Esta sección tiene
 el objetivo de explicar el funcionamiento de estos para que puedan ser 
@@ -472,7 +535,9 @@ int main()
 }
 \end{lstlisting}
 
-
+%--------------------------------------------------------------------------
+% BIBLIOGRAFÍA
+%--------------------------------------------------------------------------
 %++++++++++++++++++++++++++++++++++++++++
 % References section will be created automatically 
 % with inclusion of "thebibliography" environment
@@ -480,6 +545,8 @@ int main()
 % \begin{thebibliography}{99}
 % Note: with this approach it is YOUR responsibility to put them in order
 % of appearance.
+
+\newpage
 
 \begin{thebibliography}{99}
 
@@ -574,11 +641,25 @@ en: \\ \url{http://digitool.library.mcgill.ca/R/?func=dbin-jump-full&object_id=6
 % Evaluación de la posición:
 \bibitem{Evaluation1}
 \textit{Evaluation}. Versión del 17 de abril de 2019. Disponible en: \\
-\url{https://www.chessprogramming.org/Evaluation}
+\url{https://www.chessprogramming.org/Evaluation#Basic_Evaluation_Features}
 
 \bibitem{Evaluation2}
 \textit{Chess Programming Part VI: Evaluation Functions}. Versión del 17 de abril de 2019.
 \\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-vi-evaluation-functions-r1208}
+
+% Búsqueda:
+\bibitem{Search1}
+\textit{Search}. Versión del 17 de abril de 2019. Disponible en: \\
+\url{https://www.chessprogramming.org/Search}
+
+\bibitem{Search2}
+\textit{Chess Programming Part IV: Basic Search}. Versión del 17 de abril de 2019.
+Disponible: \\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-vi-evaluation-functions-r1208}
+
+\bibitem{Search3}
+\textit{Chess Programming Part V: Advanced Search}. Versión del 17 de abril de 2019. \\
+\url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-vi-evaluation-functions-r1208}
+
 
 % Motores de juego:
 \bibitem{Open Source Chess Engines}
