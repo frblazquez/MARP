@@ -1,0 +1,173 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+ 
+\newenvironment{problem}[2][Problema]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\usepackage[utf8]{inputenc}                 % Using Unicode encoding
+\usepackage[spanish]{babel}                 % Writing in Spanish language
+%\usepackage{listings}                       % For including C++ code
+\setlength{\parindent}{0mm}                 % Paragraph indentation null
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+%--------------------------------------------------------------------------
+%   PARA INCLUIR CÓDIGO C++ EN EL DOCUMENTO
+%--------------------------------------------------------------------------
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+\usepackage{listings}
+\lstset{ frame=Ltb,
+framerule=0pt,
+aboveskip=0.5cm,
+framextopmargin=3pt,
+framexbottommargin=3pt,
+framexleftmargin=0.4cm,
+framesep=0pt,
+rulesep=.4pt,
+backgroundcolor=\color{gray97},
+rulesepcolor=\color{black},
+%
+stringstyle=\ttfamily,
+showstringspaces = false,
+basicstyle=\small\ttfamily,
+commentstyle=\color{gray45},
+keywordstyle=\bfseries,
+%
+numbers=left,
+numbersep=15pt,
+numberstyle=\tiny,
+numberfirstline = false,
+breaklines=true,
+}
+
+% minimizar fragmentado de listados
+\lstnewenvironment{listing}[1][]
+{\lstset{#1}\pagebreak[0]}{\pagebreak[0]}
+
+\lstdefinestyle{consola}
+{basicstyle=\scriptsize\bf\ttfamily,
+backgroundcolor=\color{gray75},
+}
+
+\lstdefinestyle{C}
+{language=C,
+}
+
+\begin{document}
+
+%---------------------------------------------------------------------------------------
+% TÍTULO Y AUTOR
+%---------------------------------------------------------------------------------------
+\title{\textbf{Hoja 7 - Ejercicio 16}}
+\author{Francisco Javier Blázquez Martínez}
+\date{}
+\maketitle
+ 
+%---------------------------------------------------------------------------------------
+% ENUNCIADO DEL PROBLEMA
+%---------------------------------------------------------------------------------------
+\begin{problem}{7.16}
+Juanita afronta sus exámenes finales del curso con precipitación. Para cada asignatura
+$A_i$ del curso conoce los días $f_i$ que quedan hasta la fecha de su examen, y sabe la 
+cantidad de días $d_i$ que debería dedicar a su estudio (lógicamente, antes del 
+correspondiente examen) para poder aprobarla. Juanita se teme que no podrá con todas las 
+asignaturas, así que ha dado un valor $v_i$ a cada una de ellas, y ha de determinar qué 
+asignaturas estudiará, y en qué orden, hasta la finalización de los exámenes, a sabiendas 
+de que si dedica a una asignatura menos de los $d_i$ estipulados la suspenderá 
+irremediablemente. Debéis ayudar a Juanita a elegir las asignaturas que estudiará, de 
+manera que maximice el valor total de las asignaturas que ha decidido estudiar con tiempo 
+suficiente para aprobarlas. Describir el algoritmo de ramificación y poda apropiado para
+este problema, e indicar con detalle las cotas inferior y superior empleadas.
+\end{problem}
+
+%---------------------------------------------------------------------------------------
+% SOLUCIÓN
+%---------------------------------------------------------------------------------------
+\textbf{Solución:} \\
+
+%\setlength{\parskip}{0mm}
+%\setlength{\parskip}{\baselineskip}
+
+\setlength{\parskip}{0mm}
+Observaciones preliminares:
+
+\begin{itemize}
+    \item En las transparencias del tema de ramificación y poda, aparece una serie de 
+          diapositivas con el título ``\textit{tareas con plado fijo, duración y coste}''.
+          La idea es muy similar.
+    \item Para simplificar los cálculos de la factibilidad o infactibilidad de las soluciones
+          parciales usamos la idea dada en las transparencias. Suponemos los exámenes 
+          ordenados cronológicamente.
+\end{itemize}
+\setlength{\parskip}{\baselineskip}
+
+
+Usamos la siguente notación: \\ \setlength{\parskip}{0mm}
+
+$f_1, f_2, f_3, ... , f_n$ \hspace{1cm} Fechas de los exámenes. \\
+$d_1, d_2, d_3, ... , d_n$ \hspace{1cm} Días necesarios de preparación de cada examen. \\
+$p_1, p_2, p_3, ... , p_n$ \hspace{1cm} Puntuación asociada a cada examen. \\
+    
+maxPuntos(\{k, ... , n\}, $f_{end}$) \\ 
+
+Esta última función es para poder calcular los máximos puntos que puedo conseguir con los 
+exámenes del k al n si estoy disponible para estudiar a partir de la fecha $f_{end}$. 
+Entonces:
+
+\setlength{\parskip}{\baselineskip}
+
+maxPuntos(\{k, ... , n\}, $f_{end}$) = máximo entre \{ \\
+\setlength{\parindent}{10mm} 
+\indent maxPuntos(\{k+1, ... , n\}, $f_{end}$), \\
+\indent maxPuntos(\{k+1, ... , n\}, $f_{end}$ + $d_k$) + $p_k$ \\ \} \\
+\setlength{\parindent}{0mm} 
+
+Tenemos ya entonces la recurrencia para el esquema de ramificación y poda. Vamos a aplicar el
+esquema optimista/pesimista visto en clase junto con una cola de prioridad de máximos para 
+simplificar la condición de parada y explorar siempre por los nodos más prometedores.
+
+Optamos para tener una cota optimista sencilla suponer que todos los exámenes restantes pueden
+prepararse. Para esto calculamos y almacenamos en un vector la suma de puntuaciones de los 
+exámenes a partir de un cierto nivel (ver ``calculaOptimistas''). Para la cota pesimista optamos
+por completar de forma voraz nuestra solución. 
+
+\begin{listing}
+// Para la cota optimista
+proc calculaOptimistas(p[])
+{
+    optimistas[n] = p[n];
+    
+    for(i = n-1; i > 0; i--)
+        optimistas[i] = optimistas[i+1] + p[i];
+}
+
+
+// Para la cota pesimista
+dev:pes pesimista(f[], d[], p[], k, n, f_end)
+{
+    pes = 0;
+    
+    for(int i = k; i <=n; i++)
+    {
+        if(f[i] >= f_end + d[i])
+        {
+            pes   += p[i];
+            f_end += d[i];
+        }
+    }
+}
+\end{listing}
+
+A partir de aquí es el esquema clásico visto en clase. Tener una variable con la mejor solución
+hasta el momento (que se actualizará con la cota pesimista) y una cola de prioridad con los
+nodos con soluciones parciales explorados hasta el momento. La recursión del inicio de esta hoja
+nos da la forma de prolongar estas soluciones parciales y, por último, la condición de parada 
+será que la cota opt del siguente nodo sea menor o igual que nuestra mejor solución. 
+\end{document}
