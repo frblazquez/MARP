@@ -498,17 +498,127 @@ K,Q,R,B,N,P = Número de reyes, reinas, torres, alfiles, caballos y peones respe
 
 \section{Búsqueda}
 
+En este apartado vamos a ver el cerebro de nuestro motor. La base de su potencia de juego
+y, el punto donde definitivamente se decide si nuestro programa jugará a un nivel 
+medio-alto o a un nivel muy superior al de cualquier humano.
+
+Ya disponemos en este punto de una función de evaluación que, dada una posición, estima
+(de forma cuantitativa) qué jugador tiene ventaja. Pues bien, es claro que esta estimación
+la hace de forma estática, contando únicamente con la disposición actual del tablero. Se 
+podrían entonces dar situaciones cómo la siguiente:
+\setlength{\parskip}{0mm}
+
+    \begin{center}
+         \chessboard
+         [
+            maxfield=h8,
+            startfen=a8,
+            addfen=6k1/5ppp/PP6/B7/2N1P3/1QN1PbPq/3P1P1P/R4RK1,
+            %emphstyle=\color{red},
+            %emphareas={a12-j11, a1-j2, a3-a10, j3-j10},
+            %labelleftwidth=1.5ex,
+            showmover=false
+        ]   
+    \end{center}
+    
+\setlength{\parskip}{\baselineskip}
+En esta posición nuestra función de evaluación (y cualquiera que se precie) da una ventaja
+a las piezas blancas. Es lógico, la diferencia de material es abismal. La función de 
+evaluación anteriormente introducida da una ventaja de alrededor de 20 puntos. Sin embargo,
+el jaque mate de las piezas negras al rey blanco es, llegados a este punto, absolutamente 
+ineludible. Este es un claro ejemplo de que únicamente con una evaluación estática del 
+tablero nuestro motor nunca desarrollará un juego de alto nivel, caería en trampas de este 
+tipo. Buscaría posiciones en las que maximizara la función de evaluación únicamente en ese 
+instante, sin tener en cuenta las consecuencias de la posición en los siguientes movimientos.
+Además, este ejemplo ha sido claro porque las negras darán mate en la siguiente jugada,
+sin embargo, hay posiciones que ya están perdidas, esto es, que permiten una secuencia
+de movimientos forzados que lleva al mate en una mayor profundidad. Hay posiciones perdidas
+(o ganadas, que también queremos que vea nuestro motor) que se resuelven en 4,5,10 o un 
+número mayor de movimientos. Es por esto que la búsqueda es necesaria para saber qué 
+posiciones son deseables, mucho más allá de su función de evaluación. Para la búsqueda,
+como ya anticipábamos, se usa el algoritmo $\alpha-\beta$ (como en casi todo juego de 
+información perfecta de dos oponentes) pero, con algunas técnicas para optimizar la búsqueda
+y que nuestro motor desarrolle un juego de alto nivel. Exponemos estas interesantes técnicas 
+a continuación.
 
 
+\subsection{Mejoras del algoritmo $\alpha-\beta$}
 
-
-
-
-
-
-
-
-
+\begin{itemize}
+    \item \textbf{Tablas de transposiciones:}
+    
+    Sucede en el ajedrez que se puede llegar a una misma posición con distintos movimientos,
+    además, incluso con distinto número de movimientos (transposiciones de una posición). 
+    Esto hace que una posición ya evaluada a lo largo de nuestra búsqueda puede que aparezca
+    de nuevo en otras etapas o niveles de nuestra búsqueda. Es claro entonces que no es 
+    deseable tener que volver a emplear un valioso tiempo de CPU para analizar su árbol de
+    exploración hasta una profundidad determinada para calcular algo que ya tuvimos en 
+    nuestro poder.
+    
+    La tabla de transposiciones surge precisamente para solucionar este problema. Es una 
+    estructura de datos basada en la idea de los mapas hash que almacenan cada posición
+    analizada la mejor jugada calculada. Esto nos permite, a parte de evitar el cálculo
+    en numerosas posiciones (en los finales con pocas piezas se puede podar hasta el 90\%
+    del árbol de exploración) poder ganar profundidad en la búsqueda e incorporar técnicas
+    de preprocesado, analizando movimientos y situaciones con anterioridad almacenando los
+    resultados en la tabla de transposiciones. Esto último es principalmente útil para el
+    análisis de aperturas.
+    
+    Para más información sobre esta estructura de datos y téncnicas para generar las claves
+    hash a partir de una posición puede verse \cite{Search4,BoardRepresentation2}.
+    
+    \item \textbf{Ordenación de los posibles movimientos:}
+    
+    Como ya sabemos, las podas que realiza el algoritmo $\alpha-\beta$ durante la búsqueda
+    en el árbol de exploración dependen del orden de búsqueda seguido. Además, sabemos que
+    analizar primero los mejores movimientos nos permite que el algoritmo termine analizando
+    un número mucho menor de posiciones. Surge así la idea de combinar el algoritmo 
+    $\alpha-\beta$ con un preprocesado (de bajo coste algorítmico) que ordene los posibles
+    movimientos mediante algún criterio para aumentar (en promedio) la eficacia del algoritmo. 
+    El problema que surge aquí es: ¿cómo realizar la ordenación?.
+    
+    Ante esto, la intuición nos plantea diversos enfoques. Uno de estos enfoques podría ser 
+    analizar primero las capturas pues, son las que tienen una mayor probabilidad de obtener
+    una ventaja considerable (gracias a la diferencia de material). Otra posibilidad es 
+    aplicar la función de evaluación a las posiciones que resultan tras un movimiento en la
+    posición inicial, ordenarlos, y buscar en este orden; sin embargo, esta técnica en 
+    ajedrez se ha mostrado poco efectiva. Una técnica que sí que se ha mostrado efectiva y es
+    ampliamente utilizada es la conocida como heurística ``\textit{killer}''. Esta consiste 
+    en probar movimientos que se han mostrado efectivos en posiciones similares (las ya 
+    analizadas en niveles superiores o las que se han probado efectivas en posiciones 
+    hermanas, del mismo nivel). Esto, claro está, requiere también de una organización en 
+    memoria para guardar estos movimientos y técnicas de búsqueda y referencia a esta
+    estructura de datos. Más información sobre esta técnica puede verse en \cite{Search5}.
+    
+    Sin embargo, el enfoque óptimo es en absoluto intuitivo. Se presenta a continuación. \\
+    
+    \item \textbf{$\alpha-\beta$ con profundización iterativa:}
+    
+    Supongamos que queremos realizar una búsqueda dada una posición hasta una determinada
+    profundidad k. Si tuviéramos los resultados de la búsqueda en todos los nodos a esta
+    profundidad, podríamos ordenarlos y aplicar entonces el algoritmo $\alpha-\beta$. 
+    Sin embargo, es claro que antes de realizar la búsqueda va a ser imposible que 
+    dispongamos de los resultados de esta y, mucho menos, en todas las hojas del árbol de
+    exploración (pues precisamente queremos podar lo máximo posible). 
+    
+    La idea de esta técnica de profundización iterativa es que, para realizar una búsqueda 
+    hasta profundidad k, vamos a ejecutar una búsqueda hasta profundidad k-1 y a ordenar los
+    resultados en base a esta para realizar la búsqueda hasta profundidad k. Decíamos que
+    es absolutamente contraintuitivo pues para realizar la búsqueda hasta profundidad k,
+    vamos a ejecutar este algoritmo para profundidades 1,2,...,k. ¿Cómo es posible entonces
+    que afirmemos que aumentar el número de posiciones a explorar nos beneficie?.
+    
+    Resulta que, debido a la naturaleza exponencial del árbol de exploración, el aumento del
+    coste algorítmico en cuanto a realizar la búsqueda a profundidad k o, a profundidades k
+    y k-1 es realmente bajo (la búsqueda a profundidad k-1 tiene un coste muchísimo menor que
+    la búsqueda a profundidad k). Sin embargo, gracias disponer de la información de la 
+    búsqueda hasta una profundidad una unidad inferior, el algoritmo $\alpha-\beta$ para la
+    profundidad dada k parte de una ordenación inicial que aumenta considerablemente el
+    número de ramas de exploración podadas.
+    
+    
+    
+\end{itemize}
 
 \newpage
 \appendix
@@ -654,11 +764,19 @@ en: \\ \url{http://digitool.library.mcgill.ca/R/?func=dbin-jump-full&object_id=6
 
 \bibitem{Search2}
 \textit{Chess Programming Part IV: Basic Search}. Versión del 17 de abril de 2019.
-Disponible: \\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-vi-evaluation-functions-r1208}
+Disponible: \\ \url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-iv-basic-search-r1171}
 
 \bibitem{Search3}
 \textit{Chess Programming Part V: Advanced Search}. Versión del 17 de abril de 2019. \\
-\url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-vi-evaluation-functions-r1208}
+\url{https://www.gamedev.net/articles/programming/artificial-intelligence/chess-programming-part-v-advanced-search-r1197}
+
+\bibitem{Search4}
+\textit{Transposition table}. Versión del 17 de abril de 2019. \\
+\url{https://www.chessprogramming.org/Transposition_Table}
+
+\bibitem{Search5}
+\textit{Killer Heuristic}. Versión del 17 de abril de 2019. \\
+\url{https://www.chessprogramming.org/Killer_Heuristic}
 
 
 % Motores de juego:
