@@ -125,12 +125,9 @@ backgroundcolor=\color{gray75},
 Trabajo realizado en el marco de la asignatura \textit{Métodos algorítmicos 
 en resolución de problemas}. Se introducen diversas técnicas para el desarrollo
 de motores de ajedrez centradas principalmente en los algoritmos de búsqueda
-y exploración en el árbol de posibles movimientos. He optado por omitir en su 
-mayor parte los detalles técnicos de representación del tablero, movimientos y 
-reglas del juego por mayor simplicidad.
-
-Se incluye también un apéndice con la aplicación práctica de parte de estas técnicas
-presentadas a un problema planteado en clase, el problema de la mochila múltiple.
+y exploración en el árbol de posibles movimientos. He optado por no profundizar
+en los detalles técnicos de representación del tablero, movimientos y reglas del 
+juego por mayor simplicidad.
 
 \end{abstract}
 
@@ -144,12 +141,15 @@ impacto en nuestra sociedad. Es de sobra conocido por todos su alta complejidad
 y la dificultad de alcanzar un buen nivel de juego en este. Esto, junto con toda
 la historia que acarrea este deporte así como con la concepción social del juego,
 muchas veces tan relacionado con la inteligencia, concentración y el desarrollo 
-cognitivo lo ha hecho objeto de estudio tantas veces hasta nuestros tiempos.
+cognitivo lo ha hecho objeto de estudio tantas veces hasta nuestros tiempos. 
 
 Es por tanto lógico que, con el auge de la computación y la aparición de nuevas
 ramas del conocimiento en este ámbito (como la \textit{inteligencia artificial})
 se tratara de aplicar los nuevos conocimientos y nuevas técnicas a la resolución
-de este juego. El término ``resolución'' ha sido empleado a drede pues, en contra
+de este juego. De hecho, al ajedrez se le ha llegado a llamar la \textit{Drosophila
+Melanogaster} (mosca de la fruta) de la inteligencia artificial por la cantidad de 
+estudios y experimentos sobre este juego surgidos en este ámbito.
+El término ``resolución'' ha sido empleado a drede pues, en contra
 de lo que mucha gente pueda pensar, no se conoce (tampoco por los motores de juego
 más potentes) una estrategia de juego perfecto, esto es, que garantice el mejor
 resultado posible partiendo de una posición dada cualquiera (resolución fuerte 
@@ -230,7 +230,7 @@ explorar las posibles posiciones causadas por un movimiento. Esto último, un me
 búsqueda en el árbol de posibles movimientos.
 
 Entraremos ahora más en detalle en la representación del tablero, movimientos, evaluación
-de las posiciones y especialmente en algoritmos de búsqueda. Todas las fuentes consultadas
+de las posiciones y especialmente en técnicas de búsqueda. Todas las fuentes consultadas
 pueden verse en la bibliografía, pero he optado por destacar en este punto las empleadas en
 esta breve introducción para desarrolladores \cite{Fundamentos2, Fundamentos1}. Una gran 
 fuente de ejemplos concretos de motores de ajedrez desarrollados y de código abierto puede
@@ -301,8 +301,8 @@ consultar \cite{BoardRepresentation1, BoardRepresentation2, BoardRepresentation3
     movimientos, punto crítico para el rendimiento del motor. Se ideó entonces esta 
     estructura que engloba el tablero con un margen de casillas marcadas como ilegales.
     Son necesarias las dos filas completas superiores e inferiores debido al movimiento
-    de los caballos, que saltan siempre a casillas separadas por una fila completa a su
-    posición original.
+    de los caballos, que saltan siempre a casillas separadas por una fila  o columna 
+    completa a su posición original.
     
     De esta forma se reducen los costes de comprobación de la legalidad de un movimiento
     y se mantienen los mismos costes de búsqueda de piezas, ejecución de movimiento... 
@@ -584,7 +584,7 @@ a continuación.
     posición inicial, ordenarlos, y buscar en este orden; sin embargo, esta técnica en 
     ajedrez se ha mostrado poco efectiva. Una técnica que sí que se ha mostrado efectiva y es
     ampliamente utilizada es la conocida como heurística ``\textit{killer}''. Esta consiste 
-    en probar movimientos que se han mostrado efectivos en posiciones similares (las ya 
+    en probar movimientos que se han resultado útiles en posiciones similares (las ya 
     analizadas en niveles superiores o las que se han probado efectivas en posiciones 
     hermanas, del mismo nivel). Esto, claro está, requiere también de una organización en 
     memoria para guardar estos movimientos y técnicas de búsqueda y referencia a esta
@@ -636,8 +636,8 @@ resolución.
     y nada importa más allá de la profundidad de búsqueda que nosotros establezcamos. Ese
     es nuestro horizonte (ver \cite{Search6}). Esto conlleva una serie de anomalías en la
     decisión del mejor movimiento. Para una mejor comprensión de este efecto vamos a analizar
-    la posición incluida a continuación si nuestro motor de juego analiza hasta una 
-    profundidad de 6 movimientos. Es el turno del jugador con las piezas negras.
+    la posición incluida a continuación desde el enfoque de un motor de juego con profundidad
+    de búsqueda de hasta 6 movimientos. Es el turno del jugador con las piezas negras.
     
         \begin{center}
          \chessboard
@@ -659,7 +659,7 @@ resolución.
     
     Podemos obstaculizar el alfil colocando nuestra torre en medio (regalamos la torre con Td5) 
     y luego colocando a su vez en medio los peones de las columnas e y f en ese orden. En esta
-    variante tras seis movimientos la posición sería la siguiente:
+    variante (..,Td5 Axd5,e4 Axe4,f3 Axf3) tras seis movimientos la posición sería la siguiente:
     
         \begin{center}
          \chessboard
@@ -679,35 +679,144 @@ resolución.
     la torre y dos peones a cambio de salvar la dama (en base a las ponderaciones de la función
     de evaluación). Sin embargo no ha salvado la dama, ha pospuesto el inevitable final y ha
     regalado material a su rival, algo de lo que se dará cuenta tras sacrificar su torre cuando
-    tras el siguiente movimiento todas, absolutamente todas las líneas pierdan la dama dentro
+    en el siguiente movimiento todas, absolutamente todas las líneas pierdan la dama dentro
     de su horizonte.
+    
+    \item \textbf{Búsqueda hasta inactividad:}
+    
+    Esta suele ser la forma de remediar el efecto horizonte anteriormente planteado. La 
+    técnica consiste en, al llegar a la profundidad límite de exploración de la búsqueda,
+    analizar aquellos movimientos que se consideran drásticos (capturas, jaques y promociones
+    de peones), movimientos que hacen variar de forma drástica la función de evaluación.
+    
+    Esto tiene un serio inconveniente. Tenemos que ampliar nuestro árbol de exploración unos
+    niveles más allá de su profundidad fijada pues, para cada posición final (cuyo número es
+    exponencial con la profundidad del árbol) vamos a ejecutar esta búsqueda reducida a sólo
+    capturas y movimientos críticos. A pesar de esto, el número de capturas posibles es en
+    general mucho menor al número de posibles movimientos y se va reduciendo conforme se van
+    capturando las piezas.
+    
+    \item \textbf{Movimiento nulo:}
+    
+    Hay posiciones sumamente extrañas en ajedrez en las cuales, tener no la opción, sino la
+    obligación de mover provoca consecuencias fatales. Una de estas posiciones, llamadas de 
+    \textit{zugzwang} es la siguiente. Mueven blancas.
+    
+        \begin{center}
+         \chessboard
+         [
+            maxfield=h8,
+            startfen=a8,
+            addfen=kbK5/pp6/1P6/8/8/8/R7/8,
+            %emphstyle=\color{red},
+            %emphareas={a12-j11, a1-j2, a3-a10, j3-j10},
+            %labelleftwidth=1.5ex,
+            showmover=false
+        ]   
+    \end{center}
+    
+    En esta posición, las blancas pueden jugar Ta6!, situando su torre delante de los peones 
+    del oponente. Es fácil ver que, si pudieran ceder el turno, su fortaleza sería 
+    inexpugnable pero que al no ser esto posible, sus dos únicos movimientos pierden
+    inmediatamente. Pues bien, como hemos dicho, ya visto el ejemplo,
+    remarcamos que estas posiciones son sumamente extrañas. Por norma general, tener el turno
+    de movimiento es una ventaja que, se supone, debe permitirnos aunque sea de forma muy
+    sutil mejorar nuestra posición.
+    
+    Con la premisa anterior; ¿qué sucedería si cediendo el turno al oponente nuestro motor 
+    evalúa nuestra posición como favorable? ¡Conseguiríamos una poda-$\beta$ sin realizar 
+    ningún movimiento!. Además, esto no implica añadir un gran coste a la búsqueda pues para
+    ver cómo responder a un movimiento nulo hay que explorar un nivel menos en el árbol
+    de búsqueda (al ser exponencial, este análisis extra tiene un coste bajo).
+    
+    \item \textbf{MTD(f):}
+    
+    Este algoritmo se puede ver como una evolución del algoritmo $\alpha-\beta$. Se ha confirmado
+    como el más rápido y eficaz mecanismo para realizar la búsqueda en el juego del ajedrez (y
+    en otros muchos). Veamos en que consiste.
+    
+    Supongamos que contamos antes de la ejecución del algoritmo $\alpha-\beta$ con una estimación
+    del resultado que va a arrojar (como es el caso en el $\alpha-\beta$ con profundización 
+    iterativa). Podemos entonces aplicar este algoritmo considerando únicamente aquellas ramas
+    del árbol de exploración que arrojen un resultado que no diste más de una cierta cantidad
+    $M$ de esta estimación. De esta forma, realizamos podas preventivas. Si al final de la 
+    ejecución el algoritmo arroja un valor estrictamente dentro de los márgenes, confirmamos 
+    nuestra estimación preliminar. Las podas preventivas realizadas nos han permitido llegar a
+    esta estimación de forma más rápida. En caso contrario, cuando el algoritmo arroja un valor 
+    de los extremos permitidos, debemos repetir el proceso con un margen $M$ mayor para garantizar
+    un resultado.
+    
+    El algoritmo MTD(f) va incluso un paso más allá. ¿Qué sucedería si $M$ tiende a cero? ¿Qué
+    sucedería si $M$ fuera cero? Tendríamos entonces un margen tan estrecho que las podas 
+    preventivas serían muy severas y el número de fallos (resultados extremos obtenidos) sería
+    muy elevado. Estos fallos sin embargo, sí que podrían darnos una idea de si el valor real
+    del resultado del algoritmo $\alpha-\beta$ es mayor o menor que la estimación en la que nos
+    hemos centrado. Podemos conseguir así una búsuqeda binaria en los posibles valores de nuestra
+    función de evaluación. 
+    
+    Para aclararnos... ¿Cómo podemos aplicar esto? Nosotros tenemos una posición totalmente 
+    representada. A partir de esta consideramos los posibles movimientos de los que disponemos.
+    El algoritmo $\alpha-\beta$ ejecutado a partir de estas posiciones nos daría el valor de
+    cada posición contando con sus consecuencias hasta la profundidad prefijada. El algoritmo
+    MTD(f) nos permitirá por contra estimar el valor de cada posición ejecutándolo repetidas 
+    veces con márgenes 0 centrado en distintas estimaciones. Así podemos realizar esto para
+    cada posible movimiento y, con las estimaciones obtenidas (pueden ser arbitrariamente 
+    precisas) podemos elegir el mejor movimiento.
     
 \end{itemize}
 
+Todas estas técnicas son suficientes para que un motor de ajedrez desarrolle un juego muy 
+superior al de cualquier humano en un ordenador personal. Destacamos aquí de nuevo la
+importancia de las tablas de transposiciones y la grandísima mejora que se experimenta al
+evitar la reevaluación de posiciones. Esto hace que la grandísima mayoría de motores de 
+ajedrez actuales opten por una combinación MTD(f) + Tablas de transposiciones.
+
+Otros factores que no hemos mencionado por su escaso interés algorítmico pese a su importancia
+en las competiciones es el tiempo. En las competiciones (también las de computadores) se dispone
+de un límite de tiempo a distribuir a lo largo de la partida. La profundidad de búsqueda suele
+ser así variable en función de este. No hemos creído conveniente profundizar en esto.
+
 \newpage
-\appendix
-\section{Aplicación de estas técnicas a problemas conocidos}
-Por mayor sencillez a la hora de comprobar el correcto funcionamiento de la 
-clase he incluido dos tests, uno manual y otro automático. Esta sección tiene
-el objetivo de explicar el funcionamiento de estos para que puedan ser 
-ejecutados por cualquier persona con interés en apreciar los múltiples cambios
-de estructura de los splay trees en una secuencia de operaciones. Se puede
-también fácilmente incluir mediciones del tiempo de ejecución en el test 
-automático para convencerse de que el coste amortizado de las operaciones es 
-logarítmico.
+\section{Conclusión}
+
+Como ya hemos mencionado, el desarrollo de un motor de ajedrez puede ser (y suele ser) planteado
+en base a una serie de etapas. La primera, representación del tablero y reglas de juego, sienta
+los pilares de todo nuestro motor. Es aquí imprescindible que el código sea libre de errores y 
+elegir unas estructuras de datos adecuadas (generalmente bitboards). Tras esto ya deberíamos
+poder generar movimientos de forma sistemática dada una posición, lo que nos habilita poder
+aplicar los algoritmos de búsqueda. No obstante, esta búsqueda sería ciega sin una función de 
+evaluación, que debe ser realista y, para mayor diversión y poder apreciar el cambio de juego
+de nuestro motor al modificarla, debe estar bien encapsulada.
+
+Con todo esto, la ingente información de la que se dispone sobre este tema (algunos enlaces
+sumamente útiles en la bibliografía de este trabajo) y algunas referencias concretas de 
+motores de código abierto que pueden verse en \cite{Open Source Chess Engines} creemos que 
+es suficiente para introducirse al desarrollo de un motor propio de ajedrez. Esperamos que 
+sea de ayuda.
+
+%\appendix
+%\section{Aplicación de estas técnicas a problemas conocidos}
+%Por mayor sencillez a la hora de comprobar el correcto funcionamiento de la 
+%clase he incluido dos tests, uno manual y otro automático. Esta sección tiene
+%el objetivo de explicar el funcionamiento de estos para que puedan ser 
+%ejecutados por cualquier persona con interés en apreciar los múltiples cambios
+%de estructura de los splay trees en una secuencia de operaciones. Se puede
+%también fácilmente incluir mediciones del tiempo de ejecución en el test 
+%automático para convencerse de que el coste amortizado de las operaciones es 
+%logarítmico.
 
 
-\begin{lstlisting}
-#include "splay_tree.h"
-#include <cstdlib>
-#include <time.h>
-using namespace std;
+%\begin{lstlisting}
+%#include "splay_tree.h"
+%#include <cstdlib>
+%#include <time.h>
+%using namespace std;
 
-int main()
-{
+%int main()
+%{
 
-}
-\end{lstlisting}
+%}
+%\end{lstlisting}
 
 %--------------------------------------------------------------------------
 % BIBLIOGRAFÍA
@@ -743,9 +852,9 @@ Science} 362 (6419), 1140-1144. Artículo disponible en: \\
 \url{https://science.sciencemag.org/content/362/6419/1140/tab-pdf}
 
 % Una fuente de información perfecta
-\bibitem{Recommended Reading}
-\textit{Lecturas recomendadas}. Versión del 16 de abril de 2019. Disponible en: \\
-\url{https://www.chessprogramming.org/Recommended_Reading}
+%\bibitem{Recommended Reading}
+%\textit{Lecturas recomendadas}. Versión del 16 de abril de 2019. Disponible en: \\
+%\url{https://www.chessprogramming.org/Recommended_Reading}
 
 % Historia y bibliografía poco importante para la introducción:
 \bibitem{Intro1}
@@ -797,7 +906,7 @@ Disponible: \\
 
 \bibitem{BoardRepresentation3}
 \textit{Board representation (chess)}. Versión 18 de abril de 2019. Disponible en: \\
-\url{https://en.wikipedia.org/wiki/Board_representation_(chess)#Huffman_encodings}
+\url{https://en.wikipedia.org/wiki/Board_representation_(chess)#Huffman}
 
 \bibitem{BoardRepresentation4}
 \textit{Data structures for chess programs}. Jean Goulet. McHill University. Disponible 
@@ -846,6 +955,13 @@ Disponible: \\ \url{https://www.gamedev.net/articles/programming/artificial-inte
 \textit{Horizon effect}. Versión del 17 de abril de 2019. \\
 \url{https://en.wikipedia.org/wiki/Horizon_effect}
 
+\bibitem{Search7}
+\textit{MTD(f), A Minimax Algorithm faster than NegaScout}. Versión del 17 de abril de 2019. \\
+\url{http://people.csail.mit.edu/plaat/mtdf.html}
+
+\bibitem{Search8}
+\textit{MTD-f}. Versión del 17 de abril de 2019. \\
+\url{https://en.wikipedia.org/wiki/MTD-f}
 
 
 % Motores de juego:
