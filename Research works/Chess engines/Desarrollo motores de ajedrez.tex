@@ -616,7 +616,71 @@ a continuación.
     profundidad dada k parte de una ordenación inicial que aumenta considerablemente el
     número de ramas de exploración podadas.
     
+\end{itemize}
+
+\subsection{Mejoras del algoritmo de búsqueda}
+
+Con la aplicación del algoritmo $\alpha-\beta$ sobre la función de evaluación a una 
+profundidad fija obtenemos una aproximación inicial y un motor de juego operativo aunque
+de un nivel medio (dependiendo también de las características de la plataforma). La tabla
+de trasposiciones y la técnica de la profundización iterativa son absolutamente necesarias
+para poder aumentar la profundidad y visión de nuestro motor y conseguir así un nivel de
+juego avanzado. Sin embargo, estas no son suficientes y, a pesar de todas las técnicas
+presentadas algunos problemas persisten. Presentamos estos y sus enfoques y técnicas de 
+resolución.
+
+\begin{itemize}
+    \item \textbf{Efecto horizonte:}
     
+    Se aplica este término para referirse a que, para nuestro motor de juego, nada existe
+    y nada importa más allá de la profundidad de búsqueda que nosotros establezcamos. Ese
+    es nuestro horizonte (ver \cite{Search6}). Esto conlleva una serie de anomalías en la
+    decisión del mejor movimiento. Para una mejor comprensión de este efecto vamos a analizar
+    la posición incluida a continuación si nuestro motor de juego analiza hasta una 
+    profundidad de 6 movimientos. Es el turno del jugador con las piezas negras.
+    
+        \begin{center}
+         \chessboard
+         [
+            maxfield=h8,
+            startfen=a8,
+            addfen=3r2k1/1Q4pp/2B5/4p3/5p2/8/PPP4p/1KR3bq,
+            %emphstyle=\color{red},
+            %emphareas={a12-j11, a1-j2, a3-a10, j3-j10},
+            %labelleftwidth=1.5ex,
+            showmover=false
+        ]   
+    \end{center}
+    
+    En esta posición la reina negra está absolutamente atrapada y además está siendo amenazada
+    por el alfil blanco. En conclusión, hagamos lo que hagamos, tarde o temprano, nuestra 
+    reina va a caer en manos del oponente. De hecho, en todas las variantes cae en 6 movimientos
+    o menos (dentro de nuestro horizonte), en todas salvo una única jugada.
+    
+    Podemos obstaculizar el alfil colocando nuestra torre en medio (regalamos la torre con Td5) 
+    y luego colocando a su vez en medio los peones de las columnas e y f en ese orden. En esta
+    variante tras seis movimientos la posición sería la siguiente:
+    
+        \begin{center}
+         \chessboard
+         [
+            maxfield=h8,
+            startfen=a8,
+            addfen=6k1/1Q4pp/8/8/8/5B2/PPP4p/1KR3bq,
+            %emphstyle=\color{red},
+            %emphareas={a12-j11, a1-j2, a3-a10, j3-j10},
+            %labelleftwidth=1.5ex,
+            showmover=false
+        ]   
+    \end{center}
+    
+    El motor de ajedrez en estas circunstancias puede pensar que es un genio, ha encontrado
+    la única jugada que salva la reina. Para él, sin ninguna duda va a ser preferible entregar
+    la torre y dos peones a cambio de salvar la dama (en base a las ponderaciones de la función
+    de evaluación). Sin embargo no ha salvado la dama, ha pospuesto el inevitable final y ha
+    regalado material a su rival, algo de lo que se dará cuenta tras sacrificar su torre cuando
+    tras el siguiente movimiento todas, absolutamente todas las líneas pierdan la dama dentro
+    de su horizonte.
     
 \end{itemize}
 
@@ -777,6 +841,11 @@ Disponible: \\ \url{https://www.gamedev.net/articles/programming/artificial-inte
 \bibitem{Search5}
 \textit{Killer Heuristic}. Versión del 17 de abril de 2019. \\
 \url{https://www.chessprogramming.org/Killer_Heuristic}
+
+\bibitem{Search6}
+\textit{Horizon effect}. Versión del 17 de abril de 2019. \\
+\url{https://en.wikipedia.org/wiki/Horizon_effect}
+
 
 
 % Motores de juego:
