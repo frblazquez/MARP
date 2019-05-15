@@ -1,0 +1,166 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+ 
+\newenvironment{problem}[2][Problema]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\usepackage[utf8]{inputenc}                 % Using Unicode encoding
+\usepackage[spanish]{babel}                 % Writing in Spanish language
+%\usepackage{listings}                       % For including C++ code
+\setlength{\parindent}{0mm}                 % Paragraph indentation null
+\setlength{\parskip}{\baselineskip}         % Distance among paragraphs
+
+%--------------------------------------------------------------------------
+%   PARA INCLUIR CÓDIGO C++ EN EL DOCUMENTO
+%--------------------------------------------------------------------------
+\usepackage{color}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+\usepackage{listings}
+\lstset{ frame=Ltb,
+framerule=0pt,
+aboveskip=0.5cm,
+framextopmargin=3pt,
+framexbottommargin=3pt,
+framexleftmargin=0.4cm,
+framesep=0pt,
+rulesep=.4pt,
+backgroundcolor=\color{gray97},
+rulesepcolor=\color{black},
+%
+stringstyle=\ttfamily,
+showstringspaces = false,
+basicstyle=\small\ttfamily,
+commentstyle=\color{gray45},
+keywordstyle=\bfseries,
+%
+numbers=left,
+numbersep=15pt,
+numberstyle=\tiny,
+numberfirstline = false,
+breaklines=true,
+}
+
+% minimizar fragmentado de listados
+\lstnewenvironment{listing}[1][]
+{\lstset{#1}\pagebreak[0]}{\pagebreak[0]}
+
+\lstdefinestyle{consola}
+{basicstyle=\scriptsize\bf\ttfamily,
+backgroundcolor=\color{gray75},
+}
+
+\lstdefinestyle{C}
+{language=C,
+}
+
+\begin{document}
+
+%---------------------------------------------------------------------------------------
+% TÍTULO Y AUTOR
+%---------------------------------------------------------------------------------------
+\title{\textbf{Hoja 6 - Ejercicio 14}}
+\author{Francisco Javier Blázquez Martínez}
+\date{}
+\maketitle
+ 
+%---------------------------------------------------------------------------------------
+% ENUNCIADO DEL PROBLEMA
+%---------------------------------------------------------------------------------------
+\begin{problem}{6.14}
+Se dispone de dos vasijas con capacidades enteras distintas $C_1$ y $C_2$, dadas en 
+litros, y de una fuente de agua ilimitada. Se desea alcanzar en una de ellas una 
+cantidad exacta de litros de agua C, para lo cual podemos realizar acciones de llenado 
+y vaciado de una vasija, o de trasvase de agua entre las dos vasijas, sin derramar nada. 
+En todo trasvase de una vasija A a otra B, o bien B se llena completamente, o bien A se 
+vacía completamente (o bien ambas cosas a la vez). Por ejemplo, si $C_1 = 7$ litros y 
+$C_2 = 11$ litros, es posible conseguir en no más de 10 acciones la cantidad de 6 litros
+en una de ellas. Se desea saber si el problema tiene solución en a lo sumo n acciones 
+elementales.
+
+Diseñar un algoritmo que, dados C, $C_1$ , $C_2$ y n arbitrarios, diga si el problema 
+tiene solución, y en caso afirmativo proporcione una secuencia de acciones elementales 
+para alcanzarla. Solo deben usarse las ideas de programación dinámica, sin recurrir a 
+ninguna pericia que maneje la teoría de números.
+\end{problem}
+
+%---------------------------------------------------------------------------------------
+% SOLUCIÓN
+%---------------------------------------------------------------------------------------
+
+\textbf{Solución:} \\
+
+%\setlength{\parskip}{0mm}
+%\setlength{\parskip}{\baselineskip}
+
+\setlength{\parskip}{0mm}
+Observaciones preliminares:
+
+\begin{itemize}
+    \item Consideramos acciones el llenado, vaciado o trasvase de agua de una vasija a 
+          otra siempre de acuerdo con las condiciones del enunciado.
+    \item El enunciado dice ``\textit{a lo sumo en n acciones elementales}'' pero en esta
+          solución hemos optado por una recurrencia más rígida (posibles cantidades a 
+          obtener en \textit{exactamente} n acciones elementales). Esto hace que haya que
+          controlar la respuesta al problema planteado durante el llenado de tabla.
+\end{itemize}
+
+
+Planteamos a partir de aquí la siguiente recurrencia: \\ 
+    
+    posible($C_1$, $C_2$, C, 0) = \{(0,0)\}\\
+    posible($C_1$, $C_2$, C, k) = una\_acción(posible($C_1$, $C_2$, C, k-1))\\
+    
+Donde el método ``una\_acción'' toma un conjunto de estados de llenado de $C_1$ y $C_2$ y
+devuelve el conjunto de posibles estados de llenado finales partiendo de estos y ejecutando
+una única acción. Aquí se destaca el segundo punto de las observaciones, siempre aplica 
+una acción. 
+\setlength{\parskip}{\baselineskip}
+
+A partir de aquí, necesitaremos (debido a que nos piden también la reconstrucción de la 
+solución en caso de que exista) un espacio en memoria de hasta $k \times C_1 \times C_2$.
+Esto es porque vamos a trabajar sobre matrices de $C_1 \times C_2$ booleanos, una por 
+cada acción a ejecutar de forma que si en la i-ésima matriz el elemento (a,b) es true es
+porque podemos llegar a un estado en el que la vasija $C_1$ tiene a litros de agua y la
+vasija $C_2$ tiene b litros de agua con exactamente i acciones.
+
+
+Aclaraciones finales:
+\setlength{\parskip}{0mm}
+
+\begin{itemize}
+    \item Sobre el llenado de las tablas: \\
+          No hay mucho que explicar aquí. Partimos de la tabla del estado anterior y aplicamos
+          todas las reglas del enunciado a cada estado asociado a una casilla con valor true.
+    \item Sobre la condición de parada: \\
+          Si en algún momento, durante el llenado de tablas, marcamos una casilla cualquiera de
+          la columna o fila C-ésima como true podemos afirmar que ese estado es alcanzable y que
+          por tanto podemos llegar a tener C litros en una u otra vasija. De nuevo por la 
+          observación dos, no vale mirar únicamente la última tabla.
+    \item Sobre la reconstrucción de la solución: \\
+          Esta es tal vez la parte más complicada. ¿Cómo reconstruir la solución con la 
+          representación adoptada? Muy fácil, con otra representación ;). Si le añadimos
+          a cada casilla marcada como true en la matriz del estado k un código de la operación
+          que nos trajo hasta este punto o, directamente el estado anterior a la acción ejecutada
+          el algoritmo cae por su propio peso a cambio de un pequeño espacio adicional en memoria.
+    \item Sobre el coste: \\
+          En el caso peor tendremos que llenar todas las tablas porque en ninguna iteración se
+          da la condición de parada. En este caso, el algoritmo tiene un orden de complejidad
+          \textit{O($k \times C_1 \times C_2$)} pues aunque en los casos de mayor complicación
+          se pueden ejecutar sobre cada estado hasta 6 acciones, consideramos la ejecución de 
+          estas de coste constante.
+    
+\end{itemize}
+
+%\begin{listing}
+%//Aplicable a la clase Grafo.h (ver implementaciones dadas) 
+%\end{listing}
+
+
+\end{document}
